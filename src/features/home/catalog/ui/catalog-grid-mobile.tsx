@@ -18,7 +18,7 @@ const CatalogGridMobile = () => {
       <div className="w-full overflow-visible">
         <CarouselContent className="ml-4">
           {excursionCategories.map((card) => (
-            <CarouselItem key={card.id} className="pl-4 basis-[50%]">
+            <CarouselItem key={card.id} className="pl-4 basis-[70%]">
               <CardMobile key={card.id} {...card} />
             </CarouselItem>
           ))}

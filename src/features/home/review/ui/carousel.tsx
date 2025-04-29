@@ -1,3 +1,5 @@
+"use client";
+
 import { reviews } from "../data/data";
 import {
   Carousel,
@@ -7,8 +9,10 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import ReviewCard, { ReviewProps } from "./card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ReviewCarousel = () => {
+  const isMobile = useIsMobile();
   const grouped: Record<"white" | "dark" | "video", ReviewProps[]> = {
     white: [],
     dark: [],
@@ -60,11 +64,15 @@ const ReviewCarousel = () => {
             <CarouselNext className="size-[4.813rem]" variant={"default"} />
           </div>
         </div>
-        <CarouselContent className="ml-0">
+        <CarouselContent className={`${isMobile ? "ml-0" : "ml-0"}`}>
           {ordered.map((card) => (
             <CarouselItem
               key={card.id}
-              className="basis-[20%] md:basis-[45%] lg:basis-[26.5%]"
+              className={`${
+                isMobile
+                  ? " basis-[85%]"
+                  : "basis-[20%] md:basis-[45%] lg:basis-[26.5%]"
+              }`}
             >
               <ReviewCard {...card} />
             </CarouselItem>

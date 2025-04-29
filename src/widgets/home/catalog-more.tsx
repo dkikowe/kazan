@@ -28,7 +28,7 @@ const desktopHeader = () => {
         </h2>
       </div>
       <div>
-        <Button variant={"section"} size={"section"} className="rounded-full">
+        <Button variant={"section"} size={"section"} className="rounded-full ">
           <span>Все экскурсии</span>
           <ChevronRight />
         </Button>
@@ -39,7 +39,7 @@ const desktopHeader = () => {
 
 const mobileHeader = () => {
   return (
-    <div className="w-full">
+    <div className="w-full px-4">
       <h2 className="font-semibold leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[43.875rem]">
         Другие экскурсии, которые вас заинтересуют:
       </h2>

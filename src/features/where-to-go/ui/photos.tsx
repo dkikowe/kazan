@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Photos() {
   return (
-    <div className="flex mb-[40px] mt-[40px] gap-3">
+    <div className="hidden lg:flex mb-[40px] mt-[40px] gap-3">
       <div className="relative w-[521px] h-[321px] rounded-[18px] overflow-hidden">
         <Image
           src="/images/catalog-filter/catalog3.png"

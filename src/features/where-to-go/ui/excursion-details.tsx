@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExcursionDetailsProps {
   title: string;
@@ -26,6 +27,8 @@ export default function ExcursionDetails({
   rating,
   prices,
 }: ExcursionDetailsProps) {
+  const isMobile = useIsMobile();
+
   const scrollToBookingForm = () => {
     const bookingForm = document.getElementById("booking-form");
     if (bookingForm) {
@@ -40,8 +43,14 @@ export default function ExcursionDetails({
           <h2 className="font-['Manrope'] font-semibold text-[42px] leading-[100%] tracking-[-0.03em] text-[#0D1723] mb-4 max-w-[500px]">
             {title}
           </h2>
-          <div className="flex   gap-3 mb-6">
-            <div className="flex bg-[#F8F9FA] p-4  rounded-[10px] items-center gap-2">
+          <div
+            className={`flex ${isMobile ? "flex-col w-full" : "gap-3"} mb-6`}
+          >
+            <div
+              className={`flex bg-[#F8F9FA] p-4 rounded-[10px] items-center gap-2 ${
+                isMobile ? "w-full mb-2" : ""
+              }`}
+            >
               <Image
                 src="/icons/star.png"
                 alt="Рейтинг"
@@ -52,7 +61,11 @@ export default function ExcursionDetails({
               <span className="text-[16px] text-[#0D1723]">{rating}</span>
             </div>
 
-            <div className="bg-[#F8F9FA] flex items-center gap-2 rounded-[10px] px-4 py-2">
+            <div
+              className={`bg-[#F8F9FA] flex items-center gap-2 rounded-[10px] px-4 py-2 ${
+                isMobile ? "w-full mb-2" : ""
+              }`}
+            >
               <Image
                 src="/icons/clocks.svg"
                 alt="clock"
@@ -63,7 +76,11 @@ export default function ExcursionDetails({
               <span className="text-[16px] text-[#0D1723]">{duration}</span>
             </div>
 
-            <div className="bg-[#F8F9FA] flex gap-2 items-center rounded-[10px] px-4 py-2">
+            <div
+              className={`bg-[#F8F9FA] flex gap-2 items-center rounded-[10px] px-4 py-2 ${
+                isMobile ? "w-full" : ""
+              }`}
+            >
               <Image
                 src="/icons/location.png"
                 alt="Рейтинг"
@@ -79,24 +96,24 @@ export default function ExcursionDetails({
           </p>
 
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px] px-6 py-4 transition-colors">
+            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px]  py-4 transition-colors">
               <span className="text-[16px] text-[#0D1723]">Взрослый</span>
               <div className="flex-1 border-b border-dashed border-[#0D1723] mx-2" />
               <span className="text-[16px] text-[#0D1723]">{prices.adult}</span>
             </div>
-            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px] px-6 py-4 transition-colors">
+            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px]  py-4 transition-colors">
               <span className="text-[16px] text-[#0D1723]">Детский</span>
               <div className="flex-1 border-b border-dashed border-[#0D1723] mx-2" />
               <span className="text-[16px] text-[#0D1723]">{prices.child}</span>
             </div>
-            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px] px-6 py-4 transition-colors">
+            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px]  py-4 transition-colors">
               <span className="text-[16px] text-[#0D1723]">Пенсионный</span>
               <div className="flex-1 border-b border-dashed border-[#0D1723] mx-2" />
               <span className="text-[16px] text-[#0D1723]">
                 {prices.retired}
               </span>
             </div>
-            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px] px-6 py-4 transition-colors">
+            <div className="flex items-center gap-2 hover:bg-[#F8F9FA] rounded-[15px]  py-4 transition-colors">
               <span className="text-[16px] text-[#0D1723]">Дети до 7 лет</span>
               <div className="flex-1 border-b border-dashed border-[#0D1723] mx-2" />
               <span className="text-[16px] text-[#0D1723]">

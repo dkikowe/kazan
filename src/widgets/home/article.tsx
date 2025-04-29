@@ -4,7 +4,7 @@ import ArticleCarousel from "@/features/home/article/ui/carousel";
 
 const Article = () => {
   return (
-    <section className="flex flex-col gap-[2rem]">
+    <section className="flex flex-col gap-[0rem]">
       <Header />
       <ArticleCarousel />
     </section>

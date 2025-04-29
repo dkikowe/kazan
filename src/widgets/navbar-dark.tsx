@@ -125,7 +125,7 @@ const NavbarDark = () => {
                   className="flex items-center justify-between text-[#CBCCCF] text-[1rem] leading-[141%] tracking-[-2%] pb-[0.625rem]"
                 >
                   <span>{link.title}</span>
-                  <ChevronRight className="w-[0.438rem] h-[0.75rem] object-cover text-primary" />
+                  <ChevronRight className="w-[1rem] h-[1rem] object-cover text-primary" />
                 </Link>
                 <Separator />
               </>
@@ -142,7 +142,7 @@ const NavbarDark = () => {
                   <span className="font-medium leading-[100%] tracking-[-2%] text-white">
                     {social.title}
                   </span>
-                  <ArrowUpRight className="w-[0.438rem] h-[0.438rem] object-cover text-primary" />
+                  <ArrowUpRight className="w-[0.8rem] h-[1rem] object-cover text-primary" />
                 </Link>
               ))}
             </div>

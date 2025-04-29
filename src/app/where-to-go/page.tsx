@@ -120,7 +120,7 @@ export default function WhereToGo() {
           </div>
         </div>
 
-        <span className="font-semibold text-[28px] md:text-[37px] leading-[100%] tracking-[-0.03em] text-[#12213a] font-manrope text-center md:text-left">
+        <span className="font-semibold px-2 text-[28px] md:text-[37px] leading-[100%] tracking-[-0.03em] text-[#12213a] font-manrope text-center md:text-left">
           Бронирование экскурсии
         </span>
         <div className="flex flex-col lg:flex-row gap-[20px] md:gap-[30px] mt-[20px] md:mt-[40px]">
@@ -129,21 +129,21 @@ export default function WhereToGo() {
         </div>
         <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem] ">
           <div>
-            <h2 className="font-semibold mt-[50px] leading-[106%] tracking-[-4%] text-[1.75rem] lg:mt-[50px] lg:text-[3.375rem] max-w-[50rem] text-center md:text-left">
+            <h2 className="font-semibold mt-[50px] leading-[106%] tracking-[-4%] text-[1.75rem] px-4 lg:mt-[50px] lg:text-[3.375rem] max-w-[50rem] text-left md:text-left">
               <span className="text-primary"> Похожие экскурсии</span>, которые{" "}
               <span>могут вам понравиться</span>
             </h2>
           </div>
           <div>
-            <p className="text-[#535353] leading-[124%] text-[0.875rem] lg:text-[1.063rem] text-center md:text-left">
+            <p className="text-[#535353] leading-[124%] text-[0.875rem] px-4 lg:text-[1.063rem] text-left md:text-left">
               Путешествуйте вместе с нами
             </p>
           </div>
         </div>
         <div className="mt-[20px] flex flex-col gap-[40px] mb-[20px]">
           <ArticleCarouse />
-          <ReviewCarousel />
         </div>
+        <ReviewCarousel />
       </section>
     </main>
   );

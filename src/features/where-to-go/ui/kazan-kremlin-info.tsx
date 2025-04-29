@@ -9,11 +9,11 @@ export default function KazanKremlinInfo({ className }: KazanKremlinInfoProps) {
     <div
       data-slot="kazan-kremlin-info"
       className={cn(
-        "flex flex-col gap-12 bg-white rounded-xl py-6 text-left",
+        "flex flex-col px-4 gap-12 bg-white rounded-xl py-6 text-left",
         className
       )}
     >
-      <h2 className="font-manrope font-semibold text-[37px] leading-[100%] tracking-[-0.03em] text-[#0d1723]">
+      <h2 className=" font-manrope font-semibold text-[37px] leading-[100%] tracking-[-0.03em] text-[#0d1723]">
         Экскурсии по <span className="text-primary">Казанскому кремлю</span>
       </h2>
 
