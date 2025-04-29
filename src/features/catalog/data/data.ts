@@ -1,0 +1,35 @@
+export const catalogFilters = {
+  time: [
+    { id: "morning", title: "Утром", count: 25 },
+    { id: "day", title: "Днём", count: 18 },
+    { id: "evening", title: "Вечером", count: 10 },
+    { id: "night", title: "Ночью", count: 6 },
+  ],
+  geography: [
+    { id: "sviyazhsk", title: "Свияжск", count: 25 },
+    { id: "raifa", title: "Раифа", count: 18 },
+    { id: "city", title: "По городу", count: 10 },
+    { id: "suburban", title: "Загородные", count: 17 },
+    { id: "volga", title: "Соседние Волжские регионы", count: 2 },
+    { id: "bulgar", title: "Болгар", count: 2 },
+    { id: "kremlin", title: "Кремль", count: 3 },
+  ],
+  landmarks: [
+    { id: "unesco", title: "Юнеско", count: 11 },
+    { id: "museums", title: "Музеи", count: 8 },
+  ],
+  religion: [{ id: "orthodox", title: "Православные", count: 7 }],
+  seasonal: [{ id: "summer", title: "Летние", count: 33 }],
+  features: [
+    { id: "popular", title: "Популярные", count: 28 },
+    { id: "overview", title: "Обзорные", count: 24 },
+    { id: "historical", title: "Исторические", count: 10 },
+    { id: "modern", title: "Современные", count: 17 },
+    { id: "kids", title: "Для детей", count: 9 },
+    { id: "exclusive", title: "Эксклюзив", count: 18 },
+    { id: "food", title: "Гастрономические", count: 12 },
+    { id: "author", title: "Авторские", count: 8 },
+    { id: "entertainment", title: "Развлечения", count: 12 },
+    { id: "river", title: "Речные", count: 2 },
+  ],
+};
