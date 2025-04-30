@@ -232,7 +232,7 @@ const desktop = () => {
             </p>
           </div>
           <div className="flex flex-col gap-[1.75rem] ">
-            <div className="flex flex-col gap-[1.688rem]">
+            <div className="flex flex-col gap-[1.9rem]">
               {links.map((link, index) => (
                 <Link
                   key={index}
