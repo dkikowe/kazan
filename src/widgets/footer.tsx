@@ -156,17 +156,17 @@ const desktop = () => {
     <div className="max-w-[90rem] mx-auto grid pt-[6.25rem] pb-[1.75rem] gap-[10.125rem] lg:grid-cols-2 justify-between">
       <div className="max-w-[30.5rem] flex flex-col gap-[2.688rem]">
         <div>
-          <p className="font-semibold text-[2.188rem] leading-[118%] tracking-[-4%] text-white">
+          <p className="font-semibold text-[2.188rem] w-[40rem] leading-[118%] tracking-[-4%] text-white">
             Ваше идеальное путешествие начинается здесь
           </p>
         </div>
         <div className="flex items-center">
-          <Button className="rounded-full font-medium tracking-[-2%] text-[1.063rem] h-[3.5rem] px-[2.375rem]">
+          <Button className="rounded-full font-medium tracking-[-2%] text-[0.863rem] h-[3.5rem] px-[2.375rem]">
             Выбрать экскурсию
           </Button>
           <Button
-            className="rounded-full aspect-square h-full"
-            variant={"glass"}
+            className="rounded-full  bg-[#2A2D31] hover:bg-[#3A3D42] aspect-square h-full  text-white "
+            variant={null}
           >
             <ArrowUpRight />
           </Button>
@@ -208,18 +208,18 @@ const desktop = () => {
               Соц.сети
             </p>
           </div>
-          <div className="flex flex-col gap-[1.75rem] px-4">
-            <div className="flex flex-col gap-[1.688rem]">
+          <div className="flex flex-col gap-[1.75rem] ">
+            <div className="flex flex-col gap-[1.9rem]">
               {socials.map((social, index) => (
                 <Link
                   key={index}
                   href={social.href}
-                  className="flex items-center justify-between max-w-[6.625rem]"
+                  className="flex items-center justify-between gap-[1rem]"
                 >
                   <span className="font-medium leading-[100%] tracking-[-2%] text-white transition-all duration-200 hover:text-primary">
                     {social.title}
                   </span>
-                  <ArrowUpRight className="w-[0.438rem] h-[0.438rem] object-cover text-primary" />
+                  <ArrowUpRight className="w-[1.2rem] h-[1.2rem] object-cover text-primary" />
                 </Link>
               ))}
             </div>
@@ -231,7 +231,7 @@ const desktop = () => {
               Главная
             </p>
           </div>
-          <div className="flex flex-col gap-[1.75rem] px-4">
+          <div className="flex flex-col gap-[1.75rem] ">
             <div className="flex flex-col gap-[1.688rem]">
               {links.map((link, index) => (
                 <Link

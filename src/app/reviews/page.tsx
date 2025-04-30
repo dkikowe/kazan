@@ -26,7 +26,7 @@ export default function ReviewsPage() {
           )}
         </div>
         <div className="mb-[15px] md:mb-[20px]">
-          <div className="hidden md:flex items-center mb-[20px] md:mb-[30px] gap-[10px] md:gap-[15px] px-4 md:px-0">
+          <div className="flex items-center mb-[20px] md:mb-[30px] gap-[10px] md:gap-[15px] px-4 md:px-0">
             <Link
               href="/"
               className="text-[#6E7279] text-[14px] md:text-[16px]"
@@ -57,7 +57,7 @@ export default function ReviewsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[0.5rem] md:gap-[1.5rem] lg:gap-[2rem] justify-items-center">
+        <div className="grid mb-[30px] grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[0.5rem] md:gap-[1.5rem] lg:gap-[2rem] justify-items-center">
           {reviews.map((review) => (
             <ReviewCard key={review.id} {...review} />
           ))}

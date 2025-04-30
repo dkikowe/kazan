@@ -37,18 +37,7 @@ const CatalogMoreCard = ({
           <div className="flex items-center gap-[0.5rem]">
             <Badge variant={"glass"} size={"badge"}>
               <Image
-                src={"/icons/star.png"}
-                alt={""}
-                width={15}
-                height={15}
-                sizes="15"
-                className="object-cover"
-              />
-              <p className="font-semibold">{rating}/5</p>
-            </Badge>
-            <Badge variant={"glass"} size={"badge"}>
-              <Image
-                src={"/icons/clock.png"}
+                src={"/icons/clocks.svg"}
                 alt={""}
                 width={15}
                 height={15}
@@ -56,6 +45,17 @@ const CatalogMoreCard = ({
                 className="object-cover"
               />
               <p className="font-medium">{duration}</p>
+            </Badge>
+            <Badge variant={"glass"} size={"badge"}>
+              <Image
+                src={"/icons/star.svg"}
+                alt={""}
+                width={15}
+                height={15}
+                sizes="15"
+                className="object-cover"
+              />
+              <p className="font-semibold">{rating}/5</p>
             </Badge>
           </div>
         </div>

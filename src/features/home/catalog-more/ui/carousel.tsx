@@ -11,7 +11,7 @@ import CatalogMoreCard from "./card";
 const CatalogMoreCarousel = () => {
   return (
     <Carousel className="w-full overflow-visible">
-      <CarouselContent className="ml-[1rem] ">
+      <CarouselContent className="ml-[1rem] gap-4">
         {moreCatalogCategories.map((card) => (
           <CarouselItem
             key={card.id}

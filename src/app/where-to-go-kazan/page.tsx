@@ -62,20 +62,19 @@ const ExcursionCard = ({
         </div>
 
         {/* Кнопки */}
-        <div className="flex flex-col sm:flex-row gap-[10px] md:gap-[1.19px] mt-[20px]">
-          <Link href="/where-to-go" className="w-full sm:w-auto">
-            <button className="w-full sm:w-[253px] h-[50px] md:h-[56px] bg-[#3171F7] rounded-[100px] md:rounded-[118.75px] text-white text-[14px] md:text-[16px] leading-[20px] flex items-center justify-center cursor-pointer">
+        <div className="flex  sm:flex-row  md:gap-[1.19px] mt-[20px]">
+          <Link href="/where-to-go">
+            <button className="lg:w-[253px] w-[192px] h-[42px] md:h-[56px] bg-[#3171F7] rounded-[100px] md:rounded-[118.75px] text-white text-[14px] md:text-[16px] leading-[20px] px-[1.5rem] flex items-center justify-center cursor-pointer">
               Узнать подробнее
             </button>
           </Link>
-          <button className="w-full sm:w-[56px] h-[50px] md:h-[56px] bg-[#0D171F] rounded-[100px] md:rounded-[118.75px] flex items-center justify-center">
-            <Button
-              className="w-full sm:w-[56px] h-[50px] md:h-[56px] rounded-full aspect-square"
-              variant="black"
-            >
-              <ArrowUpRight className="size-[15px]" />
-            </Button>
-          </button>
+          <Button
+            className="w-[42px] h-[42px] lg:w-[56px] lg:h-[56px] flex-none rounded-full aspect-square h-full"
+            size={"card"}
+            variant={"black"}
+          >
+            <ArrowUpRight />
+          </Button>
         </div>
       </div>
     </div>
@@ -196,7 +195,7 @@ export default function WhereToGoKazanPage() {
   ];
 
   return (
-    <main className="bg-white">
+    <main className="bg-white overflow-x-hidden">
       <section className="max-w-[1440px] mx-auto  md:py-[20px]  md:px-0">
         <div className="mb-[30px] md:mb-[40px]">
           {isMobile ? (
@@ -210,7 +209,7 @@ export default function WhereToGoKazanPage() {
 
         {/* Хлебные крошки */}
         <div className="mb-[15px] md:mb-[20px]">
-          <div className="hidden md:flex items-center mb-[20px] md:mb-[30px] gap-[10px] md:gap-[15px] px-4 md:px-0">
+          <div className=" flex items-center mb-[20px] md:mb-[30px] gap-[10px] md:gap-[15px] px-4 md:px-0">
             <Link
               href="/"
               className="text-[#6E7279] text-[14px] md:text-[16px]"
@@ -220,16 +219,9 @@ export default function WhereToGoKazanPage() {
             <div className="w-1 h-1 rounded-full bg-[#6E7279]" />
             <Link
               href="/where-to-go"
-              className="text-[#6E7279] text-[14px] md:text-[16px]"
-            >
-              Куда сходить в Казани?
-            </Link>
-            <div className="w-1 h-1 rounded-full bg-[#6E7279]" />
-            <Link
-              href="/where-to-go-kazan"
               className="text-[#000000] text-[14px] md:text-[16px]"
             >
-              Экскурсии
+              Куда сходить в Казани?
             </Link>
           </div>
         </div>

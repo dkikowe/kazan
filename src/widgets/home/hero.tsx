@@ -14,7 +14,7 @@ const Hero = () => {
       style={{ backgroundImage: "url(/bg.png)" }}
     >
       <NavbarDark />
-      <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col justify-between py-[4.625rem] ">
+      <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col gap-[4.5rem] py-[4.625rem] ">
         <div className="flex flex-col gap-[2.5rem]">
           <div className="flex flex-col gap-[1.25rem]">
             <h1 className="max-w-[75.25rem] text-white font-medium leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[4.125rem]">
@@ -33,7 +33,7 @@ const Hero = () => {
             </Button>
             <Button
               className="rounded-full aspect-square h-full"
-              variant={"glass"}
+              variant={"outline"}
             >
               <ArrowUpRight />
             </Button>

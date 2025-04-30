@@ -16,15 +16,15 @@ const CatalogGridMobile = () => {
   return (
     <Carousel className="w-full flex flex-col gap-[1.75rem]">
       <div className="w-full overflow-visible">
-        <CarouselContent className="ml-4">
+        <CarouselContent className="">
           {excursionCategories.map((card) => (
-            <CarouselItem key={card.id} className="pl-4 basis-[70%]">
+            <CarouselItem key={card.id} className=" basis-[90%]">
               <CardMobile key={card.id} {...card} />
             </CarouselItem>
           ))}
         </CarouselContent>
       </div>
-      <Button className="rounded-full w-full py-[1rem] font-medium text-[1rem]">
+      <Button className="rounded-full w-[85%] h-[56px] mx-auto py-[1rem] font-medium text-[1rem]">
         Все экскурсии
       </Button>
     </Carousel>

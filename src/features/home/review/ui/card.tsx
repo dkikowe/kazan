@@ -36,7 +36,7 @@ const ReviewCard = (props: ReviewProps) => {
   if (props.type === "video") {
     return (
       <Card
-        className={`w-[280px] md:w-[350px] h-[400px] md:h-[700px] aspect-[7/8] lg:aspect-[2/3] bg-center bg-cover flex lfex-col justify-items-center justify-center items-center rounded-2xl`}
+        className={`w-[350px] md:w-[350px] h-[400px] md:h-[700px] aspect-[7/8] lg:aspect-[2/3] bg-center bg-cover flex lfex-col justify-items-center justify-center items-center rounded-2xl`}
         style={{ backgroundImage: `url(${props.thumbnailUrl || ""})` }}
       >
         <Button
@@ -51,7 +51,7 @@ const ReviewCard = (props: ReviewProps) => {
 
   return (
     <Card
-      className={`w-[280px] md:w-[350px] h-[400px] md:h-[700px] aspect-[7/8] lg:aspect-[2/3] ${cardClassName} rounded-2xl`}
+      className={`w-[350px] md:w-[350px] h-[400px] md:h-[700px] aspect-[7/8] lg:aspect-[2/3] ${cardClassName} rounded-2xl`}
     >
       <CardHeader>
         <div className="flex items-start gap-[0.75rem] md:gap-[1.063rem] lg:gap-[1.25rem]">
@@ -59,10 +59,11 @@ const ReviewCard = (props: ReviewProps) => {
             <AvatarImage
               src={props.avatarUrl}
               alt={props.author}
-              className="aspect-square size-[2.5rem] md:size-[3.75rem] lg:size-[4.875rem]"
+              className="aspect-square size-[3.5rem] md:size-[3.75rem] lg:size-[4.875rem] rounded-full"
             />
             <AvatarFallback>{props.author}</AvatarFallback>
           </Avatar>
+
           <div className="flex flex-col">
             <div className="inherit">
               <p

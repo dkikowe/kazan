@@ -37,7 +37,7 @@ const CategoryFilter = ({ categories }: Props) => {
 
       {isMobile ? (
         <div className="w-full mt-4">
-          <Button variant="default" className="rounded-full w-full">
+          <Button variant="default" className="rounded-full w-full h-[43px]">
             Больше тегов
           </Button>
         </div>

@@ -43,7 +43,7 @@ const ReviewCarousel = () => {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4">
+    <div className=" lg:max-w-[1440px] w-full  mx-auto px-4">
       <Carousel className="w-full overflow-visible flex flex-col gap-[0.5rem] lg:gap-[2rem]">
         <div className="flex justify-between">
           <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem]">
@@ -64,13 +64,13 @@ const ReviewCarousel = () => {
             <CarouselNext className="size-[4.813rem]" variant={"default"} />
           </div>
         </div>
-        <CarouselContent className={`${isMobile ? "ml-0" : "ml-0"}`}>
+        <CarouselContent className={`${isMobile ? "ml-0 gap-4" : "ml-0"}`}>
           {ordered.map((card) => (
             <CarouselItem
               key={card.id}
               className={`${
                 isMobile
-                  ? " basis-[85%]"
+                  ? " basis-[100%]"
                   : "basis-[20%] md:basis-[45%] lg:basis-[26.5%]"
               }`}
             >

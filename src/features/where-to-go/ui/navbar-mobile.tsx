@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, ChevronRight } from "lucide-react";
+import { Menu, ChevronRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -35,6 +36,20 @@ const NavbarMobile = () => {
     },
   ];
 
+  const socials = [
+    {
+      title: "Instagram",
+      href: "/",
+    },
+    {
+      title: "Telegram",
+      href: "/",
+    },
+    {
+      title: "Vkontakte",
+      href: "/",
+    },
+  ];
   return (
     <div className="flex items-center justify-between w-full">
       <Link href="/" className="flex items-center gap-2">
@@ -52,55 +67,61 @@ const NavbarMobile = () => {
       </Link>
 
       <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9 bg-[#3171F7]">
-            <Menu className="h-5 w-5 text-white" />
+        <SheetTrigger className="lg:hidden">
+          <Button className="rounded-[0.375rem] p-[0.438rem]">
+            <Menu className="size-[0.875rem] text-primary-foreground" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="top" className="bg-[#121824] max-h-[35.125rem]">
-          <SheetHeader className="bg-[#2A2F3A] p-4">
-            <Link href="/" className="flex items-center">
+        <SheetContent
+          side={"top"}
+          className="bg-[#121824] max-h-[37.125rem] justify-between"
+        >
+          <SheetHeader className="bg-[#2A2F3A]">
+            <Link href={"/"} className="flex items-center">
               <Image
-                src="/icons/header-white-icon.svg"
-                alt="Логотип"
-                width={24}
-                height={24}
-                className="text-[#3171F7]"
+                src={"/logo.png"}
+                alt={""}
+                width={40}
+                height={40}
+                className="object-cover size-[1.875rem] lg:size-[2.375rem]"
               />
-              <span className="text-white text-[14px] font-medium ml-4">
-                Казанские <br />
-                экскурсии
+              <span className="leading-[94%] tracking-[-4%] text-white text-[0.75rem] lg:text-[1rem]">
+                Казанские
+                <br /> экскурсии
               </span>
             </Link>
           </SheetHeader>
-          <div className="flex flex-col gap-[1.75rem] px-4 py-6">
+          <div className="flex flex-col gap-[1.75rem] px-4">
             {links.map((link, index) => (
-              <div key={index}>
+              <>
                 <Link
+                  key={index}
                   href={link.href}
-                  className={`flex items-center justify-between text-[#CBCCCF] text-[16px] pb-[0.625rem] ${
-                    pathname === link.href ? "text-white font-medium" : ""
-                  }`}
+                  className="flex items-center justify-between text-[#CBCCCF] text-[1rem] leading-[141%] tracking-[-2%] pb-[0.625rem]"
                 >
                   <span>{link.title}</span>
-                  <ChevronRight className="w-[0.438rem] h-[0.75rem] object-cover text-[#3171F7]" />
+                  <ChevronRight className="w-[1.5rem] h-[1.5rem] object-cover text-primary" />
                 </Link>
-                <Separator className="bg-[#2A2F3A] my-2" />
-              </div>
+                <Separator />
+              </>
             ))}
           </div>
-          <div className="flex items-center gap-[8px] px-4 py-4">
-            <Image
-              src="/icons/phone.svg"
-              alt="Телефон"
-              width={17}
-              height={17}
-              className="text-[#3171F7]"
-            />
-            <a href="tel:88005006589" className="text-white text-[16px]">
-              8 (800) 500-65-89
-            </a>
-          </div>
+          <SheetFooter>
+            <div className="flex flex-col gap-[1.688rem]">
+              {socials.map((social, index) => (
+                <Link
+                  key={index}
+                  href={social.href}
+                  className="flex items-center justify-between w-[150px] gap-[3rem]"
+                >
+                  <span className="font-medium leading-[100%] tracking-[-2%] text-white">
+                    {social.title}
+                  </span>
+                  <ArrowUpRight className="w-[1.2rem] h-[1.2rem] object-cover text-primary" />
+                </Link>
+              ))}
+            </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>

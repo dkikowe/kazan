@@ -24,7 +24,8 @@ const desktopHeader = () => {
     <div className="w-full flex justify-between items-end">
       <div>
         <h2 className="px-4 font-semibold leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[43.875rem]">
-          Другие экскурсии, которые вас заинтересуют:
+          Другие экскурсии, которые{" "}
+          <span className="text-primary">вас заинтересуют:</span>
         </h2>
       </div>
       <div>
@@ -41,7 +42,8 @@ const mobileHeader = () => {
   return (
     <div className="w-full px-4">
       <h2 className="font-semibold leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[43.875rem]">
-        Другие экскурсии, которые вас заинтересуют:
+        Другие экскурсии, которые{" "}
+        <span className="text-primary">вас заинтересуют:</span>
       </h2>
     </div>
   );

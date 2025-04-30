@@ -23,7 +23,7 @@ const ArticleCard = ({
 }) => {
   return (
     <Card
-      className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem] h-full transition-all duration-200 hover:-translate-y-8 hover:shadow-[0_10px_40px_rgba(0,0,0,0.40)]
+      className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem] h-[613px] transition-all duration-200 hover:-translate-y-8 hover:shadow-[0_10px_40px_rgba(0,0,0,0.40)]
 "
     >
       <CardHeader className="px-[0.313rem] pt-[0.313rem]">
