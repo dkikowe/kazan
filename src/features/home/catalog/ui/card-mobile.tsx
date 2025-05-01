@@ -17,7 +17,7 @@ const CardMobile = ({
   imageUrl: string;
 }) => {
   return (
-    <div className="flex flex-col gap-[1.75rem] px-[0.375rem] pt-[0.375rem] pb-[2.25rem] h-[429px] w-[282px] rounded-3xl bg-[#191C2D]">
+    <div className="flex flex-col gap-[1.75rem] items-center  pt-[0.375rem] pb-[2.25rem] h-[429px] w-[282px] rounded-3xl bg-[#191C2D]">
       <div
         className="aspect-square overflow-hidden bg-cover bg-center rounded-2xl w-[272px] h-[258px]"
         style={{ backgroundImage: `url(${imageUrl})` }}

@@ -11,14 +11,14 @@ const Filters = () => {
         className="w-1/4 h-full rounded-full flex items-center justify-between px-[1.563rem] py-[1.25rem] text-[#999EA3]"
         variant={"secondary"}
       >
-        <span>Поиск по ключевым словам</span>
+        <span className="ml-[0.625rem]">Поиск по ключевым словам</span>
         <Search size={15} />
       </Button>
       <Button
-        className="w-1/4 h-full rounded-full flex items-center justify-between px-[1.563rem] py-[1.25rem]"
+        className="w-1/4 h-full rounded-full flex items-center justify-between px-[3.563rem] py-[1.25rem]"
         variant={"secondary"}
       >
-        <span>Категория любая</span>
+        <span className="ml-[0.625rem]">Категория любая</span>
         <ChevronRight
           width={5}
           height={9}
@@ -29,7 +29,7 @@ const Filters = () => {
         className="w-1/4 h-full rounded-full flex items-center justify-between px-[1.563rem] py-[1.25rem]"
         variant={"secondary"}
       >
-        <span>Тип экскурсии</span>
+        <span className="ml-[0.625rem]">Тип экскурсии</span>
         <ChevronRight
           width={5}
           height={9}
@@ -37,7 +37,7 @@ const Filters = () => {
         />
       </Button>
       <Button className="w-1/4 h-full rounded-full flex items-center justify-between px-[1.563rem] py-[1.25rem]">
-        <span>Все экскурсии</span>
+        <span className="ml-[0.625rem]">Все экскурсии</span>
         <ChevronRight
           width={5}
           height={9}

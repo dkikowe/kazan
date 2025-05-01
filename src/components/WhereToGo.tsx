@@ -32,7 +32,7 @@ const WhereToGo: React.FC = () => {
     <div
       className={`${isMobile ? "w-full" : "w-[517px]"} h-[${
         isMobile ? "600px" : "563px"
-      }] flex flex-col bg-transparent rounded-[10px] border-box overflow-hidden shadow-none p-[10px]`}
+      }] flex flex-col bg-transparent rounded-[10px] border-box overflow-hidden shadow-none p-[20px]`}
     >
       {/* Верхняя белая полоса */}
       <div className="w-[90%] h-[47px] bg-white rounded-[10px] border border-[#D0D0D3] flex items-center">
@@ -76,7 +76,8 @@ const WhereToGo: React.FC = () => {
         <span className="text-[#161819] text-[14px] leading-[21px]">
           Пункт сбора:
         </span>
-        <span className="text-[#161819] text-[14px] leading-[21px] pl-[20px]">
+        <span className="text-[#161819] text-[14px] leading-[21px]  flex items-center gap-[10px]">
+          <img src="/icons/location.svg" width={11} height={14} alt="" />
           ул. Баумана, 19 в отеле Ногай (вход через Арку)
         </span>
       </div>

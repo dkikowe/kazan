@@ -8,21 +8,17 @@ export default function ContactInfo() {
 
   return (
     <div
-      className={`bg-white ${
+      className={`bg-white  ${
         isMobile ? "w-full p-4" : "rounded-[20px] p-[30px] shadow-lg w-[428px]"
       }`}
     >
-      <h2
-        className={`${
-          isMobile ? "text-[20px] mb-4" : "text-[24px] mb-[30px]"
-        } font-semibold`}
+      <div
+        className={`flex flex-col gap-[10px] ${
+          isMobile ? "space-y-[15px]" : "space-y-[20px]"
+        }`}
       >
-        Контакты
-      </h2>
-
-      <div className={`space-y-${isMobile ? "[15px]" : "[20px]"}`}>
         {/* Адрес */}
-        <div className="flex items-start gap-[15px]">
+        <div className="flex  items-start gap-[15px]">
           <div
             className={`${
               isMobile ? "w-[20px] h-[20px]" : "w-[24px] h-[24px]"
@@ -42,10 +38,14 @@ export default function ContactInfo() {
                 isMobile ? "text-[14px]" : "text-[16px]"
               } text-[#6E7279]`}
             >
-              Адрес
+              Адрес головного офиса
             </p>
-            <p className={`${isMobile ? "text-[14px]" : "text-[16px]"}`}>
-              г. Казань, ул. Баумана, д. 1
+            <p
+              className={`w-[180px] ${
+                isMobile ? "text-[14px]" : "text-[16px]"
+              }`}
+            >
+              г. Казань р. Татарстан ул. Баумана 29
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function ContactInfo() {
                 isMobile ? "text-[14px]" : "text-[16px]"
               } hover:text-[#3D79F6] transition-colors`}
             >
-              +7 (999) 999-99-99
+              +7 (800) 500 65-89
             </a>
           </div>
         </div>
@@ -103,9 +103,9 @@ export default function ContactInfo() {
             <p
               className={`${
                 isMobile ? "text-[14px]" : "text-[16px]"
-              } text-[#6E7279]`}
+              } text-[#6E7279] text-bold`}
             >
-              Email
+              Электронная почта
             </p>
             <a
               href="mailto:info@kazan-tours.ru"
@@ -113,7 +113,7 @@ export default function ContactInfo() {
                 isMobile ? "text-[14px]" : "text-[16px]"
               } hover:text-[#3D79F6] transition-colors`}
             >
-              info@kazan-tours.ru
+              dir.bs@mail.ru
             </a>
           </div>
         </div>
@@ -143,9 +143,6 @@ export default function ContactInfo() {
             </p>
             <p className={`${isMobile ? "text-[14px]" : "text-[16px]"}`}>
               Пн-Пт: 9:00 - 18:00
-            </p>
-            <p className={`${isMobile ? "text-[14px]" : "text-[16px]"}`}>
-              Сб-Вс: 10:00 - 16:00
             </p>
           </div>
         </div>

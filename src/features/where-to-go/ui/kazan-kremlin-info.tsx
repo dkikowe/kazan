@@ -9,7 +9,7 @@ export default function KazanKremlinInfo({ className }: KazanKremlinInfoProps) {
     <div
       data-slot="kazan-kremlin-info"
       className={cn(
-        "flex flex-col px-4 gap-12 bg-white rounded-xl py-6 text-left",
+        "flex flex-col px-4 gap-12 bg-white rounded-xl py-2 text-left",
         className
       )}
     >
@@ -32,10 +32,10 @@ export default function KazanKremlinInfo({ className }: KazanKremlinInfoProps) {
         Шариф
       </p>
 
-      <div className="flex gap-4 text-left">
-        <div className="w-[4px] h-[50px] bg-blue-600"></div>
+      <div className="flex gap-4 h-auto text-left">
+        <div className="w-[4px] h-auto bg-blue-600"></div>
 
-        <p className="text-[#0D1727] text-base leading-relaxed text-left">
+        <p className="text-[#0D1727] max-w-[670px] text-base leading-relaxed text-left">
           Башню Сююмбике сравнивают Пизанской, поскольку оба строения наклонены
           относительно линии горизонта.На белокаменных кремлевских стенах
           расположены три смотровые площадки, открывающие живописные виды на
@@ -43,7 +43,7 @@ export default function KazanKremlinInfo({ className }: KazanKremlinInfoProps) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 text-left w-[60%]">
+      <div className="flex flex-col gap-4 text-left w-full md:w-[60%]">
         <p className="text-[#0D1727] text-base leading-relaxed text-left">
           При строительстве Успенского монастыря было обнаружено засыпанное
           подземелье – тайна для историков и ученых. Легенда о царице Сююмбике –
@@ -52,7 +52,7 @@ export default function KazanKremlinInfo({ className }: KazanKremlinInfoProps) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 text-left">
+      <div className="flex flex-col gap-2 mb-4 md:mb-0 text-left">
         <ul className="space-y-1 text-[#0D1727] text-left">
           <li>• Казанский Кремль</li>
           <li>• Храм всех религий</li>

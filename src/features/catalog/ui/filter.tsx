@@ -20,7 +20,7 @@ const FilterSection = () => {
 
   return (
     <section className="max-w-[1440px] mx-auto">
-      <div className="flex w-[90%] mx-auto flex-col gap-[1.5rem] lg:gap-[2.313rem]">
+      <div className="flex lg:w-[100%] w-[90%] mx-auto flex-col gap-[1.5rem] lg:gap-[2.313rem]">
         <h2 className="font-semibold leading-[100%] tracking-[-3%] text-[1.688rem] lg:text-[2.813rem]">
           <span className="text-primary">Самые актуальные</span> направления
           Казани

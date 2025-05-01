@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Image from "next/image";
-
+import ReviewCarousel from "@/features/home/review/ui/carousel";
 // Компонент хлебных крошек
 const Breadcrumbs = () => {
   return (
@@ -51,9 +51,9 @@ const ExcursionCard = ({
       </div>
 
       {/* Текстовый контент */}
-      <div className="flex flex-col justify-between">
+      <div className="flex flex-col justify-around">
         <div>
-          <h1 className="text-[#0D171F] text-[24px] md:text-[37px] font-semibold mb-[10px] md:mb-[14px]">
+          <h1 className="text-[#0D171F] max-w-[381px] leading-[120%] text-[24px] md:text-[37px] font-semibold mb-[10px] md:mb-[14px]">
             {title}
           </h1>
           <p className="text-[#0D171F] text-[14px] md:text-[16px] leading-[1.4] md:leading-[21px] max-w-full md:max-w-[581px]">
@@ -62,7 +62,7 @@ const ExcursionCard = ({
         </div>
 
         {/* Кнопки */}
-        <div className="flex  sm:flex-row  md:gap-[1.19px] mt-[20px]">
+        <div className="flex  sm:flex-row  md:gap-[1.19px] mt-[20px] md:mt-[0px]">
           <Link href="/where-to-go">
             <button className="lg:w-[253px] w-[192px] h-[42px] md:h-[56px] bg-[#3171F7] rounded-[100px] md:rounded-[118.75px] text-white text-[14px] md:text-[16px] leading-[20px] px-[1.5rem] flex items-center justify-center cursor-pointer">
               Узнать подробнее
@@ -218,7 +218,7 @@ export default function WhereToGoKazanPage() {
             </Link>
             <div className="w-1 h-1 rounded-full bg-[#6E7279]" />
             <Link
-              href="/where-to-go"
+              href="/where-to-go-kazan"
               className="text-[#000000] text-[14px] md:text-[16px]"
             >
               Куда сходить в Казани?
@@ -249,6 +249,8 @@ export default function WhereToGoKazanPage() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
+
+        {isMobile && <ReviewCarousel />}
       </section>
     </main>
   );

@@ -24,7 +24,7 @@ const mobile = () => {
       <div className="flex flex-col gap-[3.625rem]">
         <div className="flex flex-col gap-[2.688rem]">
           <div>
-            <p className="font-medium text-[1.438rem] leading-[110%] text-white">
+            <p className="font-medium text-[1.238rem] leading-[110%] text-white">
               Ваше идеальное путешествие
               <br /> <span className="text-primary">начинается здесь</span>
             </p>

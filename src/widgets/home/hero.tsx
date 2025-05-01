@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { heroCategories } from "@/features/home/hero/data/data";
 import CategoryFilter from "@/features/home/hero/ui/category-filter";
 import { ArrowUpRight } from "lucide-react";
-
+import { useIsMobile } from "@/hooks/use-mobile";
 const Hero = () => {
+  const isMobile = useIsMobile();
   return (
     <section
-      className="h-[80vh] bg-cover bg-center lg:pt-[1.063rem] w-full"
+      className={`${
+        isMobile ? "min-h-[70vh]" : "h-[80vh]"
+      } bg-cover bg-center lg:pt-[1.063rem] w-full`}
       style={{ backgroundImage: "url(/bg.png)" }}
     >
       <NavbarDark />
-      <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col gap-[4.5rem] py-[4.625rem] ">
+      <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col justify-between py-[4.625rem]">
         <div className="flex flex-col gap-[2.5rem]">
           <div className="flex flex-col gap-[1.25rem]">
             <h1 className="max-w-[75.25rem] text-white font-medium leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[4.125rem]">
@@ -27,13 +30,13 @@ const Hero = () => {
               отправьтесь в незабываемое путешествие!
             </p>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center md:mb-0 mb-[3.25rem]">
             <Button className="rounded-full font-medium tracking-[-2%] text-[1.063rem] h-[3.5rem] px-[2.375rem]">
               Оставить заявку
             </Button>
             <Button
-              className="rounded-full aspect-square h-full"
-              variant={"outline"}
+              className="rounded-full  aspect-square h-[56px]"
+              variant={`${isMobile ? "outline" : "glass"}`}
             >
               <ArrowUpRight />
             </Button>

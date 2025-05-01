@@ -1,11 +1,11 @@
 export const catalogFilters = {
-  time: [
+  "Время начала": [
     { id: "morning", title: "Утром", count: 25 },
     { id: "day", title: "Днём", count: 18 },
     { id: "evening", title: "Вечером", count: 10 },
     { id: "night", title: "Ночью", count: 6 },
   ],
-  geography: [
+  "География": [
     { id: "sviyazhsk", title: "Свияжск", count: 25 },
     { id: "raifa", title: "Раифа", count: 18 },
     { id: "city", title: "По городу", count: 10 },
@@ -14,13 +14,13 @@ export const catalogFilters = {
     { id: "bulgar", title: "Болгар", count: 2 },
     { id: "kremlin", title: "Кремль", count: 3 },
   ],
-  landmarks: [
+  "Достопримечательности": [
     { id: "unesco", title: "Юнеско", count: 11 },
     { id: "museums", title: "Музеи", count: 8 },
   ],
-  religion: [{ id: "orthodox", title: "Православные", count: 7 }],
-  seasonal: [{ id: "summer", title: "Летние", count: 33 }],
-  features: [
+  "Религиозные": [{ id: "orthodox", title: "Православные", count: 7 }],
+  "Сезонные": [{ id: "summer", title: "Летние", count: 33 }],
+  "Особенности": [
     { id: "popular", title: "Популярные", count: 28 },
     { id: "overview", title: "Обзорные", count: 24 },
     { id: "historical", title: "Исторические", count: 10 },

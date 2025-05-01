@@ -46,9 +46,12 @@ const CardTall = ({
               {subtitle}
             </p>
           </div>
-          <div className="h-[5rem]">
-            <Button className="rounded-full aspect-square h-full" variant={'glass'}>
-              <ArrowUpRight />
+          <div className="p-0">
+            <Button
+              className="rounded-full h-[79px] w-[79px] aspect-square"
+              variant={"glass"}
+            >
+              <ArrowUpRight className="w-12 h-12 stroke-[2]" />
             </Button>
           </div>
         </div>

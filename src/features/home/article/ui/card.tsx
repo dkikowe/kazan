@@ -23,7 +23,7 @@ const ArticleCard = ({
 }) => {
   return (
     <Card
-      className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem] h-[613px] transition-all duration-200 hover:-translate-y-8 hover:shadow-[0_10px_40px_rgba(0,0,0,0.40)]
+      className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem] h-full lg:h-[613px] transition-all duration-200 hover:-translate-y-8 hover:shadow-[0_10px_40px_rgba(0,0,0,0.40)]
 "
     >
       <CardHeader className="px-[0.313rem] pt-[0.313rem]">
@@ -42,10 +42,10 @@ const ArticleCard = ({
           </p>
         </div>
       </CardContent>
-      <CardFooter className="w-full mt-auto">
+      <CardFooter className="px-[0.563rem] w-full mt-auto">
         <Link
           href={""}
-          className="text-primary font-semibold text-[0.938rem] lg:font-bold lg:text-[1.125rem] border-b-1 border-b-primary pb-1 border-dashed"
+          className="text-primary font-semibold lg:ml-[0.563rem] text-[0.938rem] lg:font-bold lg:text-[1.125rem] border-b-1 border-b-primary pb-1 border-dashed"
         >
           Читать далее
         </Link>

@@ -37,24 +37,13 @@ const CatalogCard = ({
   prices,
 }: CatalogCardProps) => {
   return (
-    <Card className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem]">
+    <Card className="gap-4 p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem]">
       <CardHeader className="p-0">
         <div
           className="aspect-[3/2] lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-t-[0.563rem] lg:rounded-t-[1.25rem] p-[0.875rem]"
           style={{ backgroundImage: `url(${imageUrl})` }}
         >
           <div className="flex items-center gap-[0.5rem]">
-            <Badge variant={"glass"} size={"badge"}>
-              <Image
-                src={"/icons/star.svg"}
-                alt={""}
-                width={15}
-                height={15}
-                sizes="15"
-                className="object-cover"
-              />
-              <p className="font-semibold">{rating}/5</p>
-            </Badge>
             <Badge variant={"glass"} size={"badge"}>
               <Image
                 src={"/icons/clocks.svg"}
@@ -66,12 +55,23 @@ const CatalogCard = ({
               />
               <p className="font-medium">{duration}</p>
             </Badge>
+            <Badge variant={"glass"} size={"badge"}>
+              <Image
+                src={"/icons/star.svg"}
+                alt={""}
+                width={15}
+                height={15}
+                sizes="15"
+                className="object-cover"
+              />
+              <p className="font-semibold">{rating}/5</p>
+            </Badge>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 flex flex-col gap-[1.25rem] lg:gap-[1.563rem] px-[0.563rem] lg:px-[0.938rem]">
+      <CardContent className="px-[20px] flex flex-col gap-[1.25rem] lg:gap-[1.563rem] lg:px-[0.563rem] lg:px-[0.938rem]">
         <div className="flex flex-col gap-[0.938rem]">
-          <h4 className="font-medium text-[1rem] leading-[121%] lg:text-[1.375rem]">
+          <h4 className="font-medium text-[1rem] leading-[121%] lg:text-[18px]">
             {title}
           </h4>
           <div className="flex flex-col gap-[0.375rem]">
@@ -109,7 +109,7 @@ const CatalogCard = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="w-full">
+      <CardFooter className="lg:mt-[20px] w-full">
         <div className="w-full flex items-center">
           <Button
             className="w-full flex-1 rounded-full font-semibold text-[0.813rem] lg:text-[0.938rem]"
@@ -118,7 +118,7 @@ const CatalogCard = ({
             Выбрать экскурсию
           </Button>
           <Button
-            className="w-[42px] h-[42px] lg:w-[50px] lg:h-[50px] flex-none rounded-full aspect-square h-full"
+            className="w-[42px] h-[42px] lg:w-[56px] lg:h-[56px] flex-none rounded-full aspect-square h-full"
             size={"card"}
             variant={"black"}
           >

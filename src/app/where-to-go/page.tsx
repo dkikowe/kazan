@@ -39,6 +39,13 @@ const excursionDetails = {
   duration: "2 часа 15 минут",
   location: "ул.Баумана, 29",
   rating: "4.9/5",
+  photos: [
+    "/images/catalog-filter/catalog1.png",
+    "/images/catalog-filter/catalog2.png",
+    "/images/catalog-filter/catalog3.png",
+    "/images/catalog-filter/catalog4.png",
+    "/images/catalog-filter/catalog5.png",
+  ],
   prices: {
     adult: "от 1500 ₽",
     child: "от 1500 ₽",
@@ -72,10 +79,18 @@ export default function WhereToGo() {
             </Link>
             <div className="w-1 h-1 rounded-full bg-[#6E7279]" />
             <Link
+              href="/where-to-go-kazan"
+              className="text-[#6E7279] text-[14px] md:text-[16px]"
+            >
+              Куда сходить в Казани?
+            </Link>
+            <div className="w-1 h-1 rounded-full bg-[#6E7279]" />
+
+            <Link
               href="/where-to-go"
               className="text-[#000000] text-[14px] md:text-[16px]"
             >
-              Куда сходить в Казани?
+              Экскурсия по Казанскому кремлю
             </Link>
           </div>
         </div>
@@ -95,14 +110,18 @@ export default function WhereToGo() {
             <ExcursionDetails {...excursionDetails} />
           </div>
         </div>
-        <Photos />
-        <KazanKremlinInfo />
+        <div className="hidden md:flex">
+          <Photos photos={excursionDetails.photos} />
+        </div>
+        <div className="hidden md:block">
+          <KazanKremlinInfo />
+        </div>
         <div className="mt-[30px] md:mt-[40px] mb-[30px] md:mb-[40px]">
           <DontForget />
         </div>
 
         <div className="flex flex-col mb-[30px] md:mb-[40px]">
-          <h2 className="font-semibold mb-[20px] md:mb-[40px] leading-[106%] text-center md:text-left tracking-[-4%] text-[1.5rem] md:text-[1.75rem] lg:text-[3.375rem] max-w-full md:max-w-[50rem]">
+          <h2 className="p-4 font-semibold mb-[20px] md:mb-[40px] leading-[106%] text-left md:text-left tracking-[-4%] text-[1.5rem] md:text-[1.75rem] lg:text-[3.375rem] max-w-full md:max-w-[50rem]">
             <span className="text-primary"> Посмотрите видео </span>,с
             экскурсией <span> и эмоциями наших клиентов</span>
           </h2>
@@ -120,7 +139,7 @@ export default function WhereToGo() {
           </div>
         </div>
 
-        <span className="font-semibold px-2 text-[28px] md:text-[37px] leading-[100%] tracking-[-0.03em] text-[#12213a] font-manrope text-center md:text-left">
+        <span className="font-semibold px-4 text-[28px] md:text-[37px] leading-[100%] tracking-[-0.03em] text-[#12213a] font-manrope text-center md:text-left">
           Бронирование экскурсии
         </span>
         <div className="flex flex-col lg:flex-row gap-[20px] md:gap-[30px] mt-[20px] md:mt-[40px]">
@@ -129,7 +148,7 @@ export default function WhereToGo() {
         </div>
         <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem] ">
           <div>
-            <h2 className="font-semibold mt-[50px] leading-[106%] tracking-[-4%] text-[1.75rem] px-4 lg:mt-[50px] lg:text-[3.375rem] max-w-[50rem] text-left md:text-left">
+            <h2 className="font-semibold mt-[50px] leading-[106%] tracking-[-4%] text-[1.75rem] px-4 lg:mt-[50px] lg:text-[3.375rem] max-w-[60rem] text-left md:text-left">
               <span className="text-primary"> Похожие экскурсии</span>, которые{" "}
               <span>могут вам понравиться</span>
             </h2>
@@ -140,7 +159,7 @@ export default function WhereToGo() {
             </p>
           </div>
         </div>
-        <div className="mt-[20px] flex flex-col gap-[40px] mb-[20px]">
+        <div className="mt-[0px] flex flex-col gap-[40px] mb-[20px]">
           <ArticleCarouse />
         </div>
         <ReviewCarousel />

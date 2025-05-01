@@ -8,7 +8,7 @@ const DontForget: React.FC = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="relative w-full mb-[40px]">
+    <div className="relative w-full mt-[40px] mb-[40px]">
       <div className="relative w-full">
         <Image
           src={

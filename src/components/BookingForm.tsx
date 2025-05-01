@@ -89,7 +89,7 @@ const BookingForm: React.FC = () => {
               name="agreement"
               checked={formData.agreement}
               onChange={handleChange}
-              className="w-[18px] h-[18px] rounded-[4px] border border-[#D0D0D3] border-opacity-[44%]"
+              className="w-[13px] h-[18px] rounded-[4px] border border-[#D0D0D3] border-opacity-[44%]"
             />
             <span className="text-[#161819] text-[14px] leading-[21px] opacity-[60%]">
               Согласен с Договором-офертой на оказание услуг

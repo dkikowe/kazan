@@ -20,7 +20,7 @@ const CardWide = ({
 }) => {
   return (
     <div
-      className="aspect-[7/4] w-full rounded-3xl overflow-hidden bg-cover bg-center"
+      className="aspect-[6/4] w-full rounded-3xl overflow-hidden bg-cover bg-center"
       style={{ backgroundImage: `url(${imageUrl})` }}
     >
       <div className="w-full h-full px-[1.875em] pt-[1.875em]">
@@ -46,8 +46,11 @@ const CardWide = ({
               {subtitle}
             </p>
           </div>
-          <div className="h-[5rem]">
-            <Button className="rounded-full aspect-square h-full" variant={'glass'}>
+          <div className="">
+            <Button
+              className="rounded-full h-[79px] w-[79px] aspect-square "
+              variant={"glass"}
+            >
               <ArrowUpRight />
             </Button>
           </div>

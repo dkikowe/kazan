@@ -24,7 +24,7 @@ const CategoryFilter = ({ categories }: Props) => {
   const visibleCategories = isMobile ? categories.slice(0, 8) : categories;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap lg:gap-2 gap-1">
       {visibleCategories.map((category) => (
         <CategoryButton
           key={category.id}

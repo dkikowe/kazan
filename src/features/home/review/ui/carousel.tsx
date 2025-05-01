@@ -69,9 +69,7 @@ const ReviewCarousel = () => {
             <CarouselItem
               key={card.id}
               className={`${
-                isMobile
-                  ? " basis-[100%]"
-                  : "basis-[20%] md:basis-[45%] lg:basis-[26.5%]"
+                isMobile ? " basis-[80%]" : " md:basis-[45%] lg:basis-[28.5%]"
               }`}
             >
               <ReviewCard {...card} />

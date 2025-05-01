@@ -18,7 +18,7 @@ const Header = () => {
     <div className=" px-4 flex justify-between items-end">
       <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem]">
         <div>
-          <h2 className="font-semibold leading-[106%] mt-[40px] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[31rem]">
+          <h2 className="font-semibold leading-[106%] mt-[40px] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[34rem]">
             Статьи, которые будут{" "}
             <span className="text-primary">вам полезны:</span>
           </h2>

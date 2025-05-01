@@ -28,10 +28,10 @@ const CatalogMoreCard = ({
   imageUrl: string;
 }) => {
   return (
-    <Card className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem]">
+    <Card className="p-0 gap-4 w-[310px] h-[438px] lg:w-auto lg:h-auto pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem]">
       <CardHeader className="px-[0.313rem] pt-[0.313rem]">
         <div
-          className="aspect-[3/2] lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-[0.563rem] lg:rounded-t-[1.25rem] p-[0.875rem]"
+          className="aspect-[3/2.04]  lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-[0.563rem] lg:rounded-t-[1.25rem] p-[0.875rem]"
           style={{ backgroundImage: `url(${imageUrl})` }}
         >
           <div className="flex items-center gap-[0.5rem]">
@@ -65,12 +65,12 @@ const CatalogMoreCard = ({
           <h4 className="font-medium text-[1rem] leading-[121%] lg:text-[1.375rem]">
             {title}
           </h4>
-          <p className="mx-auto font-light text-[0.875rem] lg:text-[1.125rem]">
+          <p className=" text-left max-w-[18.75rem] font-light text-[0.875rem] lg:text-[1.125rem]">
             {subtitle}
           </p>
         </div>
       </CardContent>
-      <CardFooter className="w-full">
+      <CardFooter className="w-full mt-[1.625rem]">
         <div className="w-full flex items-center">
           <Button
             className="w-full flex-1 rounded-full font-semibold text-[0.813rem] lg:text-[0.938rem]"

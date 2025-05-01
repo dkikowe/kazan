@@ -26,7 +26,7 @@ export default function ReviewsPage() {
           )}
         </div>
         <div className="mb-[15px] md:mb-[20px]">
-          <div className="flex items-center mb-[20px] md:mb-[30px] gap-[10px] md:gap-[15px] px-4 md:px-0">
+          <div className="flex items-center mb-[20px] md:mb-[30px] gap-[10px] md:gap-[15px] px-5 md:px-0">
             <Link
               href="/"
               className="text-[#6E7279] text-[14px] md:text-[16px]"
@@ -43,9 +43,9 @@ export default function ReviewsPage() {
           </div>
         </div>
 
-        <div className="flex mb-[30px] ml-[20px] flex-col gap-[0.625rem] lg:gap-[1rem]">
+        <div className="flex mb-[30px] ml-[20px] md:ml-[0px] flex-col gap-[0.625rem] lg:gap-[1rem]">
           <div>
-            <h2 className="mt-[40px] font-semibold leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[31rem]">
+            <h2 className="mt-[20px] font-semibold leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[3.375rem] max-w-[31rem]">
               Почитайте отзывы{" "}
               <span className="text-primary">наших клиентов</span>
             </h2>
@@ -57,9 +57,13 @@ export default function ReviewsPage() {
           </div>
         </div>
 
-        <div className="grid mb-[30px] grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[0.5rem] md:gap-[1.5rem] lg:gap-[2rem] justify-items-center">
+        <div className="grid mb-[30px] grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-[0.5rem] md:gap-[1.5rem] lg:gap-[2rem] justify-items-center">
           {reviews.map((review) => (
-            <ReviewCard key={review.id} {...review} />
+            <ReviewCard
+              className="md:w-[361px] w-[332px]"
+              key={review.id}
+              {...review}
+            />
           ))}
         </div>
       </section>

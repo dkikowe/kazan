@@ -24,6 +24,7 @@ export interface ReviewProps {
   avatarUrl?: string;
   videoUrl?: string;
   thumbnailUrl?: string;
+  className?: string;
 }
 
 const ReviewCard = (props: ReviewProps) => {
@@ -36,7 +37,7 @@ const ReviewCard = (props: ReviewProps) => {
   if (props.type === "video") {
     return (
       <Card
-        className={`w-[350px] md:w-[350px] h-[400px] md:h-[700px] aspect-[7/8] lg:aspect-[2/3] bg-center bg-cover flex lfex-col justify-items-center justify-center items-center rounded-2xl`}
+        className={`w-[265px] md:w-[387px] h-[392px] md:h-[638px] aspect-[7/8] lg:aspect-[2/3] bg-center bg-cover flex lfex-col justify-items-center justify-center items-center rounded-[19px] md:rounded-[31px] ${props.className}`}
         style={{ backgroundImage: `url(${props.thumbnailUrl || ""})` }}
       >
         <Button
@@ -51,7 +52,7 @@ const ReviewCard = (props: ReviewProps) => {
 
   return (
     <Card
-      className={`w-[350px] md:w-[350px] h-[400px] md:h-[700px] aspect-[7/8] lg:aspect-[2/3] ${cardClassName} rounded-2xl`}
+      className={`w-[265px] md:w-[387px] h-[392px] md:h-[638px] aspect-[7/8] lg:aspect-[2/3] ${cardClassName} rounded-[19px] md:rounded-[31px] ${props.className}`}
     >
       <CardHeader>
         <div className="flex items-start gap-[0.75rem] md:gap-[1.063rem] lg:gap-[1.25rem]">
@@ -100,7 +101,7 @@ const ReviewCard = (props: ReviewProps) => {
         <p
           className={`${
             props.type === "dark" ? "text-white" : "text-[#161913]"
-          } leading-[144%] text-[0.75rem] md:text-[0.875rem] lg:text-[1.188rem]`}
+          } leading-[144%] text-[0.75rem] md:text-[17px] `}
         >
           {props.text}
         </p>
