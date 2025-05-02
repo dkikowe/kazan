@@ -1,14 +1,19 @@
 // src/widgets/home/hero.tsx
 "use client";
 
+import { useState } from "react";
 import NavbarDark from "../navbar-dark";
 import { Button } from "@/components/ui/button";
 import { heroCategories } from "@/features/home/hero/data/data";
 import CategoryFilter from "@/features/home/hero/ui/category-filter";
 import { ArrowUpRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ContactModal from "@/components/contact-modal";
+
 const Hero = () => {
   const isMobile = useIsMobile();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <section
       className={`${
@@ -20,7 +25,7 @@ const Hero = () => {
       <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col justify-between py-[4.625rem]">
         <div className="flex flex-col gap-[2.5rem]">
           <div className="flex flex-col gap-[1.25rem]">
-            <h1 className="max-w-[75.25rem] text-white font-medium leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[4.125rem]">
+            <h1 className="max-w-[85.25rem] text-white font-medium leading-[106%] tracking-[-4%] text-[1.75rem] lg:text-[4.125rem]">
               Почувствуйте энергетику Казани: откройте для себя город вместе с
               нами!
             </h1>
@@ -31,11 +36,14 @@ const Hero = () => {
             </p>
           </div>
           <div className="flex items-center md:mb-0 mb-[3.25rem]">
-            <Button className="rounded-full font-medium tracking-[-2%] text-[1.063rem] h-[3.5rem] px-[2.375rem]">
+            <Button
+              className="rounded-full font-medium tracking-[-2%] text-[1.063rem] md:h-[75px] h-[56px] px-[2.375rem]"
+              onClick={() => setIsModalOpen(true)}
+            >
               Оставить заявку
             </Button>
             <Button
-              className="rounded-full  aspect-square h-[56px]"
+              className="rounded-full  aspect-square md:h-[75px] h-[56px]"
               variant={`${isMobile ? "outline" : "glass"}`}
             >
               <ArrowUpRight />
@@ -44,6 +52,10 @@ const Hero = () => {
         </div>
         <CategoryFilter categories={heroCategories} />
       </div>
+      <ContactModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </section>
   );
 };
