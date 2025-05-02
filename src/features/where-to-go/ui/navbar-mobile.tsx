@@ -74,12 +74,12 @@ const NavbarMobile = () => {
         </SheetTrigger>
         <SheetContent
           side={"top"}
-          className="bg-[#121824] max-h-[37.125rem] justify-between"
+          className="bg-[#121824] max-h-[44.125rem] justify-between "
         >
-          <SheetHeader className="bg-[#2A2F3A]">
+          <SheetHeader className="backdrop-blur-[48.7px] bg-[rgba(255,255,255,0.1)] ">
             <Link href={"/"} className="flex items-center">
               <Image
-                src={"/logo.png"}
+                src={"/icons/logodark.png"}
                 alt={""}
                 width={40}
                 height={40}
@@ -91,13 +91,13 @@ const NavbarMobile = () => {
               </span>
             </Link>
           </SheetHeader>
-          <div className="flex flex-col gap-[1.75rem] px-4">
+          <div className="flex flex-col gap-[0.75rem] mb-[20px] px-4">
             {links.map((link, index) => (
               <>
                 <Link
                   key={index}
                   href={link.href}
-                  className="flex items-center justify-between text-[#CBCCCF] text-[1rem] leading-[141%] tracking-[-2%] pb-[0.625rem]"
+                  className="flex items-center justify-between text-[#CBCCCF] mt-[20px] text-[1rem] leading-[141%] tracking-[-2%] pb-[0.625rem]"
                 >
                   <span>{link.title}</span>
                   <ChevronRight className="w-[1.5rem] h-[1.5rem] object-cover text-primary" />
@@ -108,11 +108,14 @@ const NavbarMobile = () => {
           </div>
           <SheetFooter>
             <div className="flex flex-col gap-[1.688rem]">
+              <p className="font-medium text-[16px] leading-[141%] tracking-[-0.02em] text-[#a5a5a5] font-manrope">
+                Соц. сети
+              </p>
               {socials.map((social, index) => (
                 <Link
                   key={index}
                   href={social.href}
-                  className="flex items-center justify-between w-[150px] gap-[3rem]"
+                  className="flex items-center justify-between w-[120px] gap-[0.3rem]"
                 >
                   <span className="font-medium leading-[100%] tracking-[-2%] text-white">
                     {social.title}

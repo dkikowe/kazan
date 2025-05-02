@@ -23,12 +23,12 @@ const ArticleCard = ({
 }) => {
   return (
     <Card
-      className="p-0 pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem] h-full lg:h-[613px] transition-all duration-200 hover:-translate-y-8 hover:shadow-[0_10px_40px_rgba(0,0,0,0.40)]
+      className="p-0 pb-[1.313rem] gap-2 md:gap-6 lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem] h-full lg:h-[613px] transition-all duration-200 hover:-translate-y-8 hover:shadow-[0_10px_40px_rgba(0,0,0,0.40)]
 "
     >
       <CardHeader className="px-[0.313rem] pt-[0.313rem]">
         <div
-          className="aspect-[3/2] lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-[0.563rem] lg:rounded-t-[1.25rem] p-[0.875rem]"
+          className=" h-[243px] lg:h-auto lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-[0.563rem]   lg:rounded-[1.25rem]   p-[0.875rem]"
           style={{ backgroundImage: `url(${imageUrl})` }}
         />
       </CardHeader>

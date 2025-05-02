@@ -28,10 +28,10 @@ const CatalogMoreCard = ({
   imageUrl: string;
 }) => {
   return (
-    <Card className="p-0 gap-4 w-[310px] h-[438px] lg:w-auto lg:h-auto pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem]">
+    <Card className="p-0 gap-4 w-[310px]  h-[438px] lg:w-auto lg:h-auto pb-[1.313rem] lg:pb-[1.813rem] rounded-[0.938rem] lg:rounded-[1.375rem]">
       <CardHeader className="px-[0.313rem] pt-[0.313rem]">
         <div
-          className="aspect-[3/2.04]  lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-[0.563rem] lg:rounded-t-[1.25rem] p-[0.875rem]"
+          className=" h-[234px] lg:h-[318px]  lg:aspect-[4/3] overflow-hidden bg-cover bg-center rounded-t-[0.563rem] rounded-b-0 lg:rounded-t-[1.25rem] lg:rounded-b-0 p-[0.875rem]"
           style={{ backgroundImage: `url(${imageUrl})` }}
         >
           <div className="flex items-center gap-[0.5rem]">
@@ -60,8 +60,8 @@ const CatalogMoreCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 px-[0.563rem] lg:px-[0.938rem]">
-        <div className="flex flex-col gap-[0.938rem]">
+      <CardContent className="p-0 px-[10px] lg:px-[20px] lg:px-[0.938rem]">
+        <div className="flex flex-col gap-[0.438rem] lg:gap-[0.938rem]">
           <h4 className="font-medium text-[1rem] leading-[121%] lg:text-[1.375rem]">
             {title}
           </h4>
@@ -70,10 +70,10 @@ const CatalogMoreCard = ({
           </p>
         </div>
       </CardContent>
-      <CardFooter className="w-full mt-[1.625rem]">
+      <CardFooter className="w-full lg:mt-[30px] mt-[10px] px-[10px] lg:px-[20px]">
         <div className="w-full flex items-center">
           <Button
-            className="w-full flex-1 rounded-full font-semibold text-[0.813rem] lg:text-[0.938rem]"
+            className="w-full px-0 flex-1 rounded-full font-semibold text-[0.813rem] lg:text-[0.938rem]"
             size={"card"}
           >
             Выбрать экскурсию

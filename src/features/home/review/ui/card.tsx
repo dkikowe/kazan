@@ -56,11 +56,11 @@ const ReviewCard = (props: ReviewProps) => {
     >
       <CardHeader>
         <div className="flex items-start gap-[0.75rem] md:gap-[1.063rem] lg:gap-[1.25rem]">
-          <Avatar className="aspect-square size-[3rem] md:size-[4.875rem]">
+          <Avatar className="aspect-square size-[61px] md:size-[4.875rem]">
             <AvatarImage
               src={props.avatarUrl}
               alt={props.author}
-              className="aspect-square size-[3.5rem] md:size-[3.75rem] lg:size-[4.875rem] rounded-full"
+              className=" w-[61px] h-[61px] md:size-[3.75rem] lg:size-[4.875rem] rounded-full"
             />
             <AvatarFallback>{props.author}</AvatarFallback>
           </Avatar>
@@ -101,7 +101,7 @@ const ReviewCard = (props: ReviewProps) => {
         <p
           className={`${
             props.type === "dark" ? "text-white" : "text-[#161913]"
-          } leading-[144%] text-[0.75rem] md:text-[17px] `}
+          } leading-[144%] text-[13px] md:text-[17px] `}
         >
           {props.text}
         </p>
@@ -110,7 +110,7 @@ const ReviewCard = (props: ReviewProps) => {
         <div className="w-full flex justify-end items-end">
           <p
             className={`${
-              props.type === "dark" ? "text-white/80" : "text-[#373737]"
+              props.type === "dark" ? "text-white/80" : "text-[#c5c5c5]"
             } leading-[144%] text-[0.688rem] md:text-[0.813rem] lg:text-[1.063rem]`}
           >
             {props.date}

@@ -64,12 +64,12 @@ const ReviewCarousel = () => {
             <CarouselNext className="size-[4.813rem]" variant={"default"} />
           </div>
         </div>
-        <CarouselContent className={`${isMobile ? "ml-0 gap-4" : "ml-0"}`}>
+        <CarouselContent className={`${isMobile ? "mt-[20px] gap-4" : "ml-0"}`}>
           {ordered.map((card) => (
             <CarouselItem
               key={card.id}
               className={`${
-                isMobile ? " basis-[80%]" : " md:basis-[45%] lg:basis-[28.5%]"
+                isMobile ? " basis-[75%]" : " md:basis-[45%] lg:basis-[28.5%]"
               }`}
             >
               <ReviewCard {...card} />

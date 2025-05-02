@@ -36,14 +36,14 @@ export default function ContactInfo() {
             <p
               className={`${
                 isMobile ? "text-[14px]" : "text-[16px]"
-              } text-[#6E7279]`}
+              } text-[#000000] font-bold`}
             >
               Адрес головного офиса
             </p>
             <p
               className={`w-[180px] ${
                 isMobile ? "text-[14px]" : "text-[16px]"
-              }`}
+              } hover:text-[#3D79F6] transition-colors`}
             >
               г. Казань р. Татарстан ул. Баумана 29
             </p>
@@ -55,7 +55,7 @@ export default function ContactInfo() {
           <div
             className={`${
               isMobile ? "w-[20px] h-[20px]" : "w-[24px] h-[24px]"
-            } mt-[2px]`}
+            } mt-[2px] `}
           >
             <Image
               src="/icons/phone.svg"
@@ -69,7 +69,7 @@ export default function ContactInfo() {
             <p
               className={`${
                 isMobile ? "text-[14px]" : "text-[16px]"
-              } text-[#6E7279]`}
+              } text-[#000000] font-bold`}
             >
               Телефон
             </p>
@@ -103,7 +103,7 @@ export default function ContactInfo() {
             <p
               className={`${
                 isMobile ? "text-[14px]" : "text-[16px]"
-              } text-[#6E7279] text-bold`}
+              } text-[#000000] font-bold`}
             >
               Электронная почта
             </p>
@@ -137,7 +137,7 @@ export default function ContactInfo() {
             <p
               className={`${
                 isMobile ? "text-[14px]" : "text-[16px]"
-              } text-[#6E7279]`}
+              } text-[#000000] font-bold`}
             >
               Время работы
             </p>

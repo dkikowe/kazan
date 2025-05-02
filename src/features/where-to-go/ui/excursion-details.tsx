@@ -149,12 +149,12 @@ export default function ExcursionDetails({
           <div className="flex items-center mt-6">
             <button
               onClick={scrollToBookingForm}
-              className="w-[253px] h-[56px] bg-[#3171F7] text-white rounded-[119px] text-[16px] font-medium hover:bg-[#2B63E0] transition-colors cursor-pointer"
+              className="w-full h-[56px] bg-[#3171F7] text-white rounded-[119px] text-[16px] font-medium hover:bg-[#2B63E0] transition-colors cursor-pointer"
             >
-              Забронировать экскурсию
+              {isMobile ? "Заказать тур" : "Забронировать экскурсию"}
             </button>
             <Button
-              className="w-[56px] h-[56px] rounded-full aspect-square"
+              className="w-[56px] h-[56px] hidden md:flex rounded-full aspect-square"
               variant="black"
             >
               <ArrowUpRight className="size-[15px]" />

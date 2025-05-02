@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowUpRight } from "lucide-react";
-
+import Link from "next/link";
 type CatalogCardProps = {
   id: string;
   imageUrl: string;
@@ -69,7 +69,7 @@ const CatalogCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-[20px] flex flex-col gap-[1.25rem] lg:gap-[1.563rem] lg:px-[0.563rem] lg:px-[0.938rem]">
+      <CardContent className="px-[20px] flex flex-col gap-[1.25rem] lg:gap-[1.563rem]  lg:px-[20px]">
         <div className="flex flex-col gap-[0.938rem]">
           <h4 className="font-medium text-[1rem] leading-[121%] lg:text-[18px]">
             {title}
@@ -111,12 +111,15 @@ const CatalogCard = ({
       </CardContent>
       <CardFooter className="lg:mt-[20px] w-full">
         <div className="w-full flex items-center">
-          <Button
-            className="w-full flex-1 rounded-full font-semibold text-[0.813rem] lg:text-[0.938rem]"
-            size={"card"}
-          >
-            Выбрать экскурсию
-          </Button>
+          <Link href={`/blog`}>
+            <Button
+              className="w-full flex-1 rounded-full px-5 md:w-[253px] font-semibold text-[0.813rem] lg:text-[0.938rem]"
+              size={"card"}
+            >
+              Выбрать экскурсию
+            </Button>
+          </Link>
+
           <Button
             className="w-[42px] h-[42px] lg:w-[56px] lg:h-[56px] flex-none rounded-full aspect-square h-full"
             size={"card"}
