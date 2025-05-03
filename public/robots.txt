@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+Disallow: /admin/
+
+Sitemap: https://khajan-final.vercel.app/sitemap.xml 

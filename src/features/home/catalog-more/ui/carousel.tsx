@@ -15,7 +15,7 @@ const CatalogMoreCarousel = () => {
         {moreCatalogCategories.map((card) => (
           <CarouselItem
             key={card.id}
-            className=" basis-[90%] md:basis-[45%] lg:basis-[30.5%]"
+            className=" basis-[85%] md:basis-[45%] lg:basis-[30.5%]"
           >
             <CatalogMoreCard key={card.id} {...card} />
           </CarouselItem>

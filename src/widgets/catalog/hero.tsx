@@ -6,8 +6,38 @@ import { Button } from "@/components/ui/button";
 import { heroCategories } from "@/features/home/hero/data/data";
 import CategoryFilter from "@/features/home/hero/ui/category-filter";
 import { ArrowUpRight } from "lucide-react";
+import { ITag } from "@/models/Tag";
+import { useEffect, useState } from "react";
 
 const Hero = () => {
+  const [tags, setTags] = useState<ITag[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/api/tags");
+        if (!response.ok) {
+          throw new Error("Ошибка при загрузке тегов");
+        }
+        const data = await response.json();
+        setTags(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Произошла ошибка");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
+  const categories = tags.map((tag) => ({
+    id: tag.slug,
+    label: tag.name,
+  }));
+
   return (
     <section
       className="h-[45vh]  lg:h-[70vh] bg-cover bg-center lg:pt-[1.063rem]"
@@ -29,7 +59,7 @@ const Hero = () => {
           </div>
         </div>
         <div className="hidden lg:block mb-[2.25rem]">
-          <CategoryFilter categories={heroCategories} />
+          <CategoryFilter categories={categories} />
         </div>
       </div>
     </section>

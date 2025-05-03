@@ -1,16 +1,17 @@
 // src/features/hero/hooks/useCategory.ts
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
-export function useCategory(initialId: string = "historical") {
-  const [activeId, setActiveId] = useState(initialId);
+export const useCategory = () => {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const router = useRouter();
 
-  const isActive = (id: string) => activeId === id;
-
-  const toggle = (id: string) => {
+  const toggle = useCallback((id: string) => {
     setActiveId(id);
-  };
+    router.push(`/catalog?tag=${id}`);
+  }, [router]);
 
-  return { activeId, isActive, toggle };
-}
+  return { activeId, toggle };
+};

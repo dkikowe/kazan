@@ -63,7 +63,7 @@ const ExcursionCard = ({
 
         {/* Кнопки */}
         <div className="flex  sm:flex-row  md:gap-[1.19px] mt-[20px] md:mt-[0px]">
-          <Link href="/where-to-go">
+          <Link href="/blog">
             <button className="lg:w-[253px] w-[192px] h-[42px] md:h-[56px] bg-[#3171F7] rounded-[100px] md:rounded-[118.75px] text-white text-[14px] md:text-[16px] leading-[20px] px-[1.5rem] flex items-center justify-center cursor-pointer">
               Узнать подробнее
             </button>

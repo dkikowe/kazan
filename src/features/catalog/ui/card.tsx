@@ -111,7 +111,7 @@ const CatalogCard = ({
       </CardContent>
       <CardFooter className="lg:mt-[20px] w-full">
         <div className="w-full flex items-center">
-          <Link href={`/blog`}>
+          <Link href={`/where-to-go`}>
             <Button
               className="w-full flex-1 rounded-full px-5 md:w-[253px] font-semibold text-[0.813rem] lg:text-[0.938rem]"
               size={"card"}

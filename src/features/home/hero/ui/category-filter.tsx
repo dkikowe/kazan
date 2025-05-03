@@ -42,7 +42,7 @@ const CategoryFilter = ({ categories }: Props) => {
           </Button>
         </div>
       ) : (
-        <Button variant="glass" className="rounded-full">
+        <Button variant="glass" className="md:h-[45px] rounded-full">
           Ещё
         </Button>
       )}

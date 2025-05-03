@@ -1,6 +1,5 @@
 "use client";
 
-import { catalogFilters } from "../data/data";
 import { catalogCard } from "../data/card-data";
 import { CatalogAside, CatalogAsideMobile } from "./aside";
 import CatalogCard from "./card";
@@ -26,11 +25,7 @@ const FilterSection = () => {
           Казани
         </h2>
         <div className="grid gap-[1.5rem] lg:grid-cols-[18vw_1fr]">
-          {isMobile ? (
-            <CatalogAsideMobile filters={catalogFilters} />
-          ) : (
-            <CatalogAside filters={catalogFilters} />
-          )}
+          {isMobile ? <CatalogAsideMobile /> : <CatalogAside />}
           <div className="grid gap-[1.5rem] md:grid-cols-2 lg:grid-cols-3">
             {catalogCard.map((card) => (
               <CatalogCard key={card.id} {...card} />

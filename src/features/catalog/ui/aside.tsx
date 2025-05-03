@@ -1,7 +1,7 @@
 // src/features/catalog/ui/aside.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   AccordionItem,
@@ -10,7 +10,8 @@ import {
   Accordion,
 } from "@/components/ui/accordion";
 import { FilterAccordion } from "./filter-accordion";
-import { catalogFilters } from "../data/data";
+import { getFilters } from "../api/filters";
+import { FilterGroup } from "../api/types";
 import {
   Tooltip,
   TooltipContent,
@@ -31,31 +32,50 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 
-type FilterOption = {
-  id: string;
-  title: string;
-  count: number;
-  checked?: boolean;
-};
-
-type CatalogFilters = {
-  [category: string]: FilterOption[];
-};
-
 interface CatalogAsideProps {
-  filters: CatalogFilters;
+  initialFilters?: FilterGroup[];
 }
 
-export const CatalogAside = ({ filters }: CatalogAsideProps) => {
+export const CatalogAside = ({ initialFilters }: CatalogAsideProps) => {
+  const [filters, setFilters] = useState<FilterGroup[]>(initialFilters || []);
   const [priceRange, setPriceRange] = useState<[number, number]>([800, 7200]);
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
   >({});
+  const [isLoading, setIsLoading] = useState(!initialFilters);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getFilters();
+        setFilters(data);
+      } catch (error) {
+        console.error("Error fetching filters:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!initialFilters) {
+      fetchFilters();
+    }
+  }, [initialFilters]);
 
   const resetFilters = () => {
     setPriceRange([800, 7200]);
     setSelectedFilters({});
   };
+
+  if (isLoading) {
+    return (
+      <aside className="w-full h-fit p-[0.75rem] rounded-[1.188rem] border lg:p-[1.125rem] bg-white">
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="w-full h-fit p-[0.75rem] rounded-[1.188rem] border lg:p-[1.125rem] bg-white">
@@ -75,7 +95,7 @@ export const CatalogAside = ({ filters }: CatalogAsideProps) => {
           <p>Сбросить</p>
         </div>
       </div>
-      <Accordion type="multiple" defaultValue={Object.keys(catalogFilters)}>
+      <Accordion type="multiple" defaultValue={filters.map((f) => f.id)}>
         <AccordionItem value="price">
           <AccordionTrigger className="font-medium text-[#151515] leading-[112%] text-[1.063rem]">
             Цена, руб.
@@ -144,11 +164,11 @@ export const CatalogAside = ({ filters }: CatalogAsideProps) => {
             </div>
           </AccordionContent>
         </AccordionItem>
-        {Object.entries(catalogFilters).map(([category, options]) => (
+        {filters.map((filterGroup) => (
           <FilterAccordion
-            key={category}
-            category={category}
-            options={options}
+            key={filterGroup.id}
+            category={filterGroup.title}
+            options={filterGroup.options}
             selectedFilters={selectedFilters}
             setSelectedFilters={setSelectedFilters}
           />
@@ -164,9 +184,39 @@ export const CatalogAside = ({ filters }: CatalogAsideProps) => {
   );
 };
 
-export const CatalogAsideMobile = ({ filters }: CatalogAsideProps) => {
+export const CatalogAsideMobile = ({ initialFilters }: CatalogAsideProps) => {
   const [open, setOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterGroup[]>(initialFilters || []);
   const [priceRange, setPriceRange] = useState<[number, number]>([800, 7200]);
+  const [isLoading, setIsLoading] = useState(!initialFilters);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getFilters();
+        setFilters(data);
+      } catch (error) {
+        console.error("Error fetching filters:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!initialFilters) {
+      fetchFilters();
+    }
+  }, [initialFilters]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full border rounded-2xl bg-white">
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full border rounded-2xl bg-white">
@@ -191,7 +241,6 @@ export const CatalogAsideMobile = ({ filters }: CatalogAsideProps) => {
       {open && (
         <div className="mt-4 space-y-4 px-[1rem] pb-[2.5rem]">
           <Accordion type="multiple" defaultValue={["price"]}>
-            {/* Цена */}
             <AccordionItem value="price">
               <AccordionTrigger className="font-medium text-[1.063rem]">
                 Цена, руб.
@@ -228,15 +277,14 @@ export const CatalogAsideMobile = ({ filters }: CatalogAsideProps) => {
               </AccordionContent>
             </AccordionItem>
 
-            {/* Остальные категории */}
-            {Object.entries(filters).map(([category, options]) => (
-              <AccordionItem key={category} value={category}>
+            {filters.map((filterGroup) => (
+              <AccordionItem key={filterGroup.id} value={filterGroup.id}>
                 <AccordionTrigger className="capitalize font-medium text-[1.063rem]">
-                  {category}
+                  {filterGroup.title}
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="flex flex-col gap-4 pt-2">
-                    {options.map((option) => (
+                    {filterGroup.options.map((option) => (
                       <div
                         key={option.id}
                         className="flex items-center gap-2.5"
