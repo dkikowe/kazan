@@ -54,7 +54,9 @@ const mobile = () => {
         </div>
         <div className="flex items-center gap-[5rem]">
           <Link
-            href={""}
+            href="https://wa.me/+79625578141"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex flex-col gap-[0.5rem] group text-center"
           >
             <Button
@@ -67,8 +69,9 @@ const mobile = () => {
               чат
             </span>
           </Link>
+
           <Link
-            href={""}
+            href="tel:+79625578141"
             className="flex flex-col gap-[0.5rem] group text-center"
           >
             <Button
@@ -81,8 +84,9 @@ const mobile = () => {
               звонок
             </span>
           </Link>
+
           <Link
-            href={""}
+            href=""
             className="flex flex-col gap-[0.5rem] group text-center"
           >
             <Button

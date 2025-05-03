@@ -9,7 +9,7 @@ export interface ITag extends Document {
   metaDescription?: string;
 }
 
-const TagSchema: Schema = new Schema({
+const TagSchema = new Schema({
   name: {
     type: String,
     required: [true, 'Название обязательно'],
@@ -55,4 +55,5 @@ TagSchema.pre('save', function(this: ITag, next) {
   next();
 });
 
-export default mongoose.models.Tag || mongoose.model<ITag>('Tag', TagSchema); 
+const Tag = mongoose.models.Tag || mongoose.model<ITag>('Tag', TagSchema);
+export default Tag; 

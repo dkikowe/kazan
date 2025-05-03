@@ -1,15 +1,31 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const categorySchema = new mongoose.Schema({
+export interface ICategory extends Document {
+  name: string;
+  slug: string;
+  seoMeta: {
+    title?: string;
+    description?: string;
+    keywords?: string;
+  };
+  filterGroup: string;
+  tagLine: string;
+  tagSort: number;
+  showInTags: boolean;
+}
+
+const CategorySchema = new Schema({
   name: {
     type: String,
-    required: true,
-    unique: true,
+    required: [true, 'Название обязательно'],
+    trim: true,
   },
   slug: {
     type: String,
-    required: true,
+    required: [true, 'Slug обязателен'],
+    trim: true,
     unique: true,
+    lowercase: true,
   },
   seoMeta: {
     title: String,
@@ -18,11 +34,11 @@ const categorySchema = new mongoose.Schema({
   },
   filterGroup: {
     type: String,
-    required: true,
+    required: [true, 'Группа фильтров обязательна'],
   },
   tagLine: {
     type: String,
-    required: true,
+    required: [true, 'Теговая линия обязательна'],
   },
   tagSort: {
     type: Number,
@@ -36,4 +52,16 @@ const categorySchema = new mongoose.Schema({
   timestamps: true,
 });
 
-export default mongoose.models.Category || mongoose.model('Category', categorySchema); 
+// Предварительная обработка перед сохранением
+CategorySchema.pre('save', function(this: ICategory, next) {
+  if (!this.slug) {
+    this.slug = this.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+  next();
+});
+
+const Category = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
+export default Category; 
