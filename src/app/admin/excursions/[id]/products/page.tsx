@@ -51,11 +51,12 @@ interface Excursion {
   description: string;
 }
 
-export default function ExcursionProductsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ExcursionProductsPage({ params }: PageProps) {
+  const { id } = await params;
   const router = useRouter();
   const [products, setProducts] = useState<ExcursionProduct[]>([]);
   const [excursion, setExcursion] = useState<Excursion | null>(null);
@@ -65,13 +66,13 @@ export default function ExcursionProductsPage({
 
   useEffect(() => {
     fetchData();
-  }, [params.id]);
+  }, [id]);
 
   const fetchData = async () => {
     try {
       const [excursionRes, productsRes] = await Promise.all([
-        fetch(`/api/excursions/${params.id}`),
-        fetch(`/api/excursion-products?excursionId=${params.id}`),
+        fetch(`/api/excursions/${id}`),
+        fetch(`/api/excursion-products?excursionId=${id}`),
       ]);
 
       const excursionData = await excursionRes.json();
@@ -150,9 +151,7 @@ export default function ExcursionProductsPage({
             />
           </div>
           <Button
-            onClick={() =>
-              router.push(`/admin/excursions/${params.id}/products/new`)
-            }
+            onClick={() => router.push(`/admin/excursions/${id}/products/new`)}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />

@@ -9,19 +9,26 @@ const connectDB = async () => {
 };
 
 // GET /api/filter-groups/[id]
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Неверный ID группы фильтров' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
-    const filterGroup = await FilterGroup.findById(params.id);
+    const filterGroup = await FilterGroup.findById(id);
+
     if (!filterGroup) {
       return NextResponse.json(
         { error: 'Группа фильтров не найдена' },
         { status: 404 }
       );
     }
+
     return NextResponse.json(filterGroup);
   } catch (error) {
     return NextResponse.json(
@@ -32,48 +39,58 @@ export async function GET(
 }
 
 // PUT /api/filter-groups/[id]
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request) {
   try {
-    await connectDB();
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Неверный ID группы фильтров' },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
-    const filterGroup = await FilterGroup.findByIdAndUpdate(
-      params.id,
-      data,
-      { new: true, runValidators: true }
-    );
+    await connectDB();
+    const filterGroup = await FilterGroup.findByIdAndUpdate(id, data, { new: true });
+
     if (!filterGroup) {
       return NextResponse.json(
         { error: 'Группа фильтров не найдена' },
         { status: 404 }
       );
     }
+
     return NextResponse.json(filterGroup);
   } catch (error) {
     return NextResponse.json(
       { error: 'Ошибка при обновлении группы фильтров' },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
 
 // DELETE /api/filter-groups/[id]
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request) {
   try {
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Неверный ID группы фильтров' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
-    const filterGroup = await FilterGroup.findByIdAndDelete(params.id);
+    const filterGroup = await FilterGroup.findByIdAndDelete(id);
+
     if (!filterGroup) {
       return NextResponse.json(
         { error: 'Группа фильтров не найдена' },
         { status: 404 }
       );
     }
-    return NextResponse.json({ message: 'Группа фильтров удалена' });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { error: 'Ошибка при удалении группы фильтров' },

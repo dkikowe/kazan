@@ -11,6 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ExcursionProduct } from "@/models/excursion-product";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId, Document } from "mongodb";
+import mongoose from "mongoose";
 
 const serviceSchema = z.object({
   title: z.string().min(1, "Название обязательно"),
@@ -20,233 +24,132 @@ const serviceSchema = z.object({
 
 type ServiceFormData = z.infer<typeof serviceSchema>;
 
-interface ExcursionProduct {
+interface Service {
   _id: string;
-  excursionCard: {
-    _id: string;
-    title: string;
-  };
-  services: Array<{
-    _id: string;
-    title: string;
-    description: string;
-    price: number;
-  }>;
+  title: string;
+  description: string;
+  price: number;
 }
 
-export default function ExcursionProductServicesPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+interface IExcursionProduct {
+  _id: string;
+  title: string;
+  services: Service[];
+}
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ServicesPage({ params }: PageProps) {
+  const { id } = await params;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [product, setProduct] = useState<ExcursionProduct | null>(null);
-  const [newService, setNewService] = useState<ServiceFormData>({
-    title: "",
-    description: "",
-    price: 0,
-  });
+  const [product, setProduct] = useState<IExcursionProduct | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ServiceFormData>({
-    resolver: zodResolver(serviceSchema),
-    defaultValues: newService,
-  });
-
-  useEffect(() => {
-    fetchProduct();
-  }, [params.id]);
-
+  // Fetch product data
   const fetchProduct = async () => {
     try {
-      const response = await fetch(`/api/excursion-products/${params.id}`);
+      const response = await fetch(`/api/excursion-products/${id}`);
       if (!response.ok) throw new Error("Failed to fetch product");
+
       const data = await response.json();
       setProduct(data);
+      setServices(data.services || []);
+      setLoading(false);
     } catch (error) {
-      toast.error("Ошибка при загрузке товара");
-    } finally {
+      console.error("Error fetching product:", error);
       setLoading(false);
     }
   };
 
-  const onSubmit = async (data: ServiceFormData) => {
+  // Handle service operations
+  const addService = async (service: Service) => {
+    if (!product) return;
     try {
       setSaving(true);
-      const response = await fetch(`/api/excursion-products/${params.id}`, {
-        method: "PUT",
+      const response = await fetch(`/api/excursion-products/${id}/services`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          services: [...(product?.services || []), data],
-        }),
+        body: JSON.stringify(service),
       });
 
       if (!response.ok) throw new Error("Failed to add service");
 
-      toast.success("Услуга успешно добавлена");
-      reset();
-      fetchProduct();
+      setServices([...services, service]);
     } catch (error) {
-      toast.error("Ошибка при добавлении услуги");
+      console.error("Error adding service:", error);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteService = async (serviceId: string) => {
+  const removeService = async (service: Service) => {
+    if (!product) return;
     try {
       setSaving(true);
-      const updatedServices = product?.services.filter(
-        (service) => service._id !== serviceId
+      const response = await fetch(
+        `/api/excursion-products/${id}/services/${service._id}`,
+        {
+          method: "DELETE",
+        }
       );
 
-      const response = await fetch(`/api/excursion-products/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          services: updatedServices,
-        }),
-      });
+      if (!response.ok) throw new Error("Failed to remove service");
 
-      if (!response.ok) throw new Error("Failed to delete service");
-
-      toast.success("Услуга успешно удалена");
-      fetchProduct();
+      setServices(services.filter((s) => s._id !== service._id));
     } catch (error) {
-      toast.error("Ошибка при удалении услуги");
+      console.error("Error removing service:", error);
     } finally {
       setSaving(false);
     }
   };
 
+  // Load product data on mount
+  useEffect(() => {
+    fetchProduct();
+  }, []);
+
   if (loading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      </div>
-    );
+    return <div>Loading...</div>;
+  }
+
+  if (!product) {
+    return <div>Product not found</div>;
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">
-          Услуги для {product?.excursionCard.title}
-        </h1>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Добавить услугу</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <Input
-                    {...register("title")}
-                    placeholder="Название услуги"
-                    disabled={saving}
-                  />
-                  {errors.title && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.title.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Textarea
-                    {...register("description")}
-                    placeholder="Описание услуги"
-                    disabled={saving}
-                  />
-                  {errors.description && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.description.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Input
-                    type="number"
-                    {...register("price", { valueAsNumber: true })}
-                    placeholder="Цена"
-                    disabled={saving}
-                  />
-                  {errors.price && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.price.message}
-                    </p>
-                  )}
-                </div>
-
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Сохранение..." : "Добавить услугу"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Список услуг</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {product?.services.map((service) => (
-                  <Card key={service._id}>
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold">{service.title}</h3>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {service.description}
-                          </p>
-                          <p className="text-sm font-medium mt-2">
-                            {service.price} ₽
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteService(service._id)}
-                          disabled={saving}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {!product?.services.length && (
-                  <p className="text-center text-gray-500">
-                    Нет добавленных услуг
-                  </p>
-                )}
+    <div className="container mx-auto py-6">
+      <h1 className="text-2xl font-bold mb-4">Управление услугами</h1>
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">
+          Услуги для {product.title}
+        </h2>
+        {/* Services list */}
+        <div className="space-y-4">
+          {services.map((service) => (
+            <div
+              key={service._id}
+              className="flex items-center justify-between p-4 border rounded"
+            >
+              <div>
+                <h3 className="font-medium">{service.title}</h3>
+                <p className="text-gray-600">{service.description}</p>
+                <p className="text-sm font-medium">{service.price} ₸</p>
               </div>
-            </CardContent>
-          </Card>
+              <button
+                onClick={() => removeService(service)}
+                className="text-red-500 hover:text-red-700"
+                disabled={saving}
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

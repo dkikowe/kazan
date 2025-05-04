@@ -16,92 +16,76 @@ import {
   CreditCard,
   CheckCircle2,
 } from "lucide-react";
+import { ExcursionProduct } from "@/models/excursion-product";
+import { connectToDatabase } from "@/lib/mongodb";
 
-interface ExcursionProduct {
-  _id: string;
-  excursionCard: {
-    _id: string;
-    title: string;
-  };
-  tickets: Array<{
-    type: string;
-    price: number;
-  }>;
-  dateRanges: Array<{
-    start: string;
-    end: string;
-  }>;
-  meetingPoints: Array<{
-    location: string;
-    time: string;
-  }>;
-  paymentOptions: Array<{
-    type: string;
-    description: string;
-  }>;
-  groups: Array<{
-    minSize: number;
-    maxSize: number;
-    price: number;
-  }>;
-  isPublished: boolean;
+interface NavigationButtonsProps {
+  id: string;
+  title: string;
 }
 
-export default function ExcursionProductPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+function NavigationButtons({ id, title }: NavigationButtonsProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [product, setProduct] = useState<ExcursionProduct | null>(null);
 
-  useEffect(() => {
-    fetchProduct();
-  }, [params.id]);
+  return (
+    <div className="flex items-center gap-4 mb-8">
+      <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <h1 className="text-2xl font-bold">Товар: {title}</h1>
+      <Button
+        variant="outline"
+        onClick={() => router.push(`/admin/excursion-products/${id}/edit`)}
+      >
+        <Pencil className="h-4 w-4 mr-2" />
+        Редактировать
+      </Button>
+    </div>
+  );
+}
 
-  const fetchProduct = async () => {
-    try {
-      const response = await fetch(`/api/excursion-products/${params.id}`);
-      if (!response.ok) throw new Error("Failed to fetch product");
-      const data = await response.json();
-      setProduct(data);
-    } catch (error) {
-      toast.error("Ошибка при загрузке товара");
-    } finally {
-      setLoading(false);
-    }
-  };
+interface DateRange {
+  start: string;
+  end: string;
+}
 
-  if (loading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      </div>
-    );
+interface Ticket {
+  type: string;
+  price: number;
+}
+
+interface MeetingPoint {
+  location: string;
+  time: string;
+}
+
+interface PaymentOption {
+  type: string;
+  description: string;
+}
+
+interface Group {
+  minSize: number;
+  maxSize: number;
+  price: number;
+}
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function Page({ params }: PageProps) {
+  const { id } = await params;
+  await connectToDatabase();
+  const product = await ExcursionProduct.findById(id).populate("excursionCard");
+
+  if (!product) {
+    throw new Error("Product not found");
   }
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">
-          Товар: {product?.excursionCard.title}
-        </h1>
-        <Button
-          variant="outline"
-          onClick={() =>
-            router.push(`/admin/excursion-products/${params.id}/edit`)
-          }
-        >
-          <Pencil className="h-4 w-4 mr-2" />
-          Редактировать
-        </Button>
-      </div>
+      <NavigationButtons id={id} title={product.excursionCard.title} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
@@ -110,7 +94,7 @@ export default function ExcursionProductPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product?.dateRanges.map((range, index) => (
+              {product.dateRanges.map((range: DateRange, index: number) => (
                 <div key={index} className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   <span>
@@ -129,7 +113,7 @@ export default function ExcursionProductPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product?.tickets.map((ticket, index) => (
+              {product.tickets.map((ticket: Ticket, index: number) => (
                 <div key={index} className="flex justify-between items-center">
                   <span>{ticket.type}</span>
                   <span className="font-medium">{ticket.price} ₽</span>
@@ -145,14 +129,16 @@ export default function ExcursionProductPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product?.meetingPoints.map((point, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>{point.location}</span>
-                  <Clock className="h-4 w-4 ml-2" />
-                  <span>{point.time}</span>
-                </div>
-              ))}
+              {product.meetingPoints.map(
+                (point: MeetingPoint, index: number) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{point.location}</span>
+                    <Clock className="h-4 w-4 ml-2" />
+                    <span>{point.time}</span>
+                  </div>
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -163,17 +149,19 @@ export default function ExcursionProductPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product?.paymentOptions.map((option, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span className="font-medium">{option.type}</span>
+              {product.paymentOptions.map(
+                (option: PaymentOption, index: number) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      <span className="font-medium">{option.type}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 ml-6">
+                      {option.description}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-500 ml-6">
-                    {option.description}
-                  </p>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -184,7 +172,7 @@ export default function ExcursionProductPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product?.groups.map((group, index) => (
+              {product.groups.map((group: Group, index: number) => (
                 <div key={index} className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   <span>
@@ -203,7 +191,7 @@ export default function ExcursionProductPage({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              {product?.isPublished ? (
+              {product.isPublished ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                   <span className="text-green-500">Опубликован</span>

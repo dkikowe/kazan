@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import mongoose from "mongoose";
-import ExcursionProduct from "@/models/ExcursionProduct";
+import { ExcursionProduct } from "@/models/excursion-product";
 
 // Подключение к MongoDB
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) return;
-  await mongoose.connect('mongodb+srv://dkikowe:dkikowe@project.0g2vn.mongodb.net/vostokargo');
+  await mongoose.connect(process.env.MONGODB_URI || '');
 };
 
 // GET /api/excursion-products

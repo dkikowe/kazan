@@ -9,74 +9,91 @@ const connectDB = async () => {
 };
 
 // GET /api/filter-items/[id]
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Неверный ID фильтра' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
-    const filterItem = await FilterItem.findById(params.id);
+    const filterItem = await FilterItem.findById(id);
+
     if (!filterItem) {
       return NextResponse.json(
-        { error: 'Элемент фильтра не найден' },
+        { error: 'Фильтр не найден' },
         { status: 404 }
       );
     }
+
     return NextResponse.json(filterItem);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Ошибка при получении элемента фильтра' },
+      { error: 'Ошибка при получении фильтра' },
       { status: 500 }
     );
   }
 }
 
 // PUT /api/filter-items/[id]
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request) {
   try {
-    await connectDB();
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Неверный ID фильтра' },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
-    const filterItem = await FilterItem.findByIdAndUpdate(
-      params.id,
-      data,
-      { new: true, runValidators: true }
-    );
+    await connectDB();
+    const filterItem = await FilterItem.findByIdAndUpdate(id, data, { new: true });
+
     if (!filterItem) {
       return NextResponse.json(
-        { error: 'Элемент фильтра не найден' },
+        { error: 'Фильтр не найден' },
         { status: 404 }
       );
     }
+
     return NextResponse.json(filterItem);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Ошибка при обновлении элемента фильтра' },
-      { status: 400 }
+      { error: 'Ошибка при обновлении фильтра' },
+      { status: 500 }
     );
   }
 }
 
 // DELETE /api/filter-items/[id]
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request) {
   try {
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Неверный ID фильтра' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
-    const filterItem = await FilterItem.findByIdAndDelete(params.id);
+    const filterItem = await FilterItem.findByIdAndDelete(id);
+
     if (!filterItem) {
       return NextResponse.json(
-        { error: 'Элемент фильтра не найден' },
+        { error: 'Фильтр не найден' },
         { status: 404 }
       );
     }
-    return NextResponse.json({ message: 'Элемент фильтра удален' });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Ошибка при удалении элемента фильтра' },
+      { error: 'Ошибка при удалении фильтра' },
       { status: 500 }
     );
   }
