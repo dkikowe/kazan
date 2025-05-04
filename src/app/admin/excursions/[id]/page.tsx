@@ -21,14 +21,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { excursionFormSchema, type ExcursionFormData } from "@/types/excursion";
 
-export default function EditExcursionPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default function EditExcursionPage({ params }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [excursionId, setExcursionId] = useState<string>("");
 
   const form = useForm<ExcursionFormData>({
     resolver: zodResolver(excursionFormSchema),
@@ -68,9 +69,15 @@ export default function EditExcursionPage({
   });
 
   useEffect(() => {
+    params.then((resolvedParams) => {
+      setExcursionId(resolvedParams.id);
+    });
+  }, [params]);
+
+  useEffect(() => {
     const fetchExcursion = async () => {
       try {
-        const response = await fetch(`/api/excursions/${params.id}`);
+        const response = await fetch(`/api/excursions/${excursionId}`);
         const data = await response.json();
 
         if (!response.ok) throw new Error("Failed to fetch excursion");
@@ -85,12 +92,12 @@ export default function EditExcursionPage({
     };
 
     fetchExcursion();
-  }, [params.id, form, router]);
+  }, [excursionId, form, router]);
 
   const onSubmit = async (values: ExcursionFormData) => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/excursions/${params.id}`, {
+      const response = await fetch(`/api/excursions/${excursionId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
