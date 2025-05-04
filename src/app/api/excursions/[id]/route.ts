@@ -1,30 +1,29 @@
-import { NextResponse } from 'next/server';
-import mongoose from 'mongoose';
-import ExcursionCard from '@/models/ExcursionCard';
+import { NextRequest } from "next/server";
+import mongoose from "mongoose";
+import { ExcursionCard } from "@/models/excursion-card";
 import CommercialExcursion from '@/models/CommercialExcursion';
 
 // Подключение к MongoDB
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) return;
-  await mongoose.connect('mongodb+srv://dkikowe:dkikowe@project.0g2vn.mongodb.net/vostokargo');
+  await mongoose.connect(process.env.MONGODB_URI!);
 };
 
 // GET /api/excursions/[id]
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const excursion = await ExcursionCard.findById(params.id)
+    const excursion = await ExcursionCard.findById(context.params.id)
       .populate('tags')
       .populate('categories');
 
     if (!excursion) {
-      return NextResponse.json(
-        { error: 'Excursion not found' },
-        { status: 404 }
-      );
+      return new Response(JSON.stringify({ error: "Экскурсия не найдена" }), {
+        status: 404,
+      });
     }
 
     // Получаем коммерческие данные
@@ -32,37 +31,35 @@ export async function GET(
       commercialSlug: excursion.commercialSlug,
     });
 
-    return NextResponse.json({ card: excursion, commercial });
+    return new Response(JSON.stringify({ card: excursion, commercial }), {
+      status: 200,
+    });
   } catch (error) {
-    console.error('Error fetching excursion:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch excursion' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: "Ошибка при получении экскурсии" }), {
+      status: 500,
+    });
   }
 }
 
 // PUT /api/excursions/[id]
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
     const data = await request.json();
-
-    // Обновляем карточку экскурсии
+    
     const excursion = await ExcursionCard.findByIdAndUpdate(
-      params.id,
-      data.card,
+      context.params.id,
+      { $set: data },
       { new: true }
     ).populate('tags').populate('categories');
 
     if (!excursion) {
-      return NextResponse.json(
-        { error: 'Excursion not found' },
-        { status: 404 }
-      );
+      return new Response(JSON.stringify({ error: "Экскурсия не найдена" }), {
+        status: 404,
+      });
     }
 
     // Обновляем коммерческие данные
@@ -74,30 +71,29 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(excursion);
-  } catch (error: any) {
-    console.error('Error updating excursion:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to update excursion' },
-      { status: 400 }
-    );
+    return new Response(JSON.stringify(excursion), {
+      status: 200,
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: "Ошибка при обновлении экскурсии" }), {
+      status: 500,
+    });
   }
 }
 
 // DELETE /api/excursions/[id]
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const excursion = await ExcursionCard.findById(params.id);
+    const excursion = await ExcursionCard.findByIdAndDelete(context.params.id);
 
     if (!excursion) {
-      return NextResponse.json(
-        { error: 'Excursion not found' },
-        { status: 404 }
-      );
+      return new Response(JSON.stringify({ error: "Экскурсия не найдена" }), {
+        status: 404,
+      });
     }
 
     // Удаляем коммерческие данные
@@ -105,15 +101,12 @@ export async function DELETE(
       commercialSlug: excursion.commercialSlug,
     });
 
-    // Удаляем карточку экскурсии
-    await excursion.deleteOne();
-
-    return NextResponse.json({ message: 'Excursion deleted successfully' });
+    return new Response(JSON.stringify({ message: "Экскурсия успешно удалена" }), {
+      status: 200,
+    });
   } catch (error) {
-    console.error('Error deleting excursion:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete excursion' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: "Ошибка при удалении экскурсии" }), {
+      status: 500,
+    });
   }
 } 

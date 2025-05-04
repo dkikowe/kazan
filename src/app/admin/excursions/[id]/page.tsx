@@ -122,7 +122,16 @@ export default function EditExcursionPage({ params }: Props) {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Редактирование экскурсии</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Редактирование экскурсии</h1>
+        <Button
+          onClick={() =>
+            router.push(`/admin/excursions/${excursionId}/products/new`)
+          }
+        >
+          Создать товар
+        </Button>
+      </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
