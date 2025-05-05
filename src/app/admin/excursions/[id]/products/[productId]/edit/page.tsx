@@ -46,14 +46,14 @@ interface ExcursionProduct {
 }
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
     productId: string;
-  };
+  }>;
 }
 
-export default function EditProductPage({ params }: PageProps) {
-  const { id, productId } = params;
+export default async function EditProductPage({ params }: PageProps) {
+  const { id, productId } = await params;
   const router = useRouter();
   const [product, setProduct] = useState<ExcursionProduct | null>(null);
   const [loading, setLoading] = useState(true);

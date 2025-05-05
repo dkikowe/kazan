@@ -70,7 +70,7 @@ interface Excursion {
 }
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function ExcursionProductsPage({ params }: PageProps) {
@@ -80,12 +80,22 @@ export default function ExcursionProductsPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [excursionId, setExcursionId] = useState<string>("");
 
-  const loadData = async () => {
+  useEffect(() => {
+    const init = async () => {
+      const { id } = await params;
+      setExcursionId(id);
+      await loadData(id);
+    };
+    init();
+  }, [params]);
+
+  const loadData = async (id: string) => {
     try {
       const [excursionResponse, productsResponse] = await Promise.all([
-        fetch(`/api/excursions/${params.id}`),
-        fetch(`/api/excursion-products?excursionId=${params.id}`),
+        fetch(`/api/excursions/${id}`),
+        fetch(`/api/excursion-products?excursionId=${id}`),
       ]);
 
       if (!excursionResponse.ok || !productsResponse.ok) {
@@ -99,14 +109,11 @@ export default function ExcursionProductsPage({ params }: PageProps) {
       setProducts(productsData);
     } catch (error) {
       console.error("Error fetching data:", error);
+      toast.error("Ошибка при загрузке данных");
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadData();
-  }, [params.id]);
 
   const filteredProducts = products.filter((product) =>
     product.dateRanges.some(
@@ -125,7 +132,7 @@ export default function ExcursionProductsPage({ params }: PageProps) {
       if (!response.ok) throw new Error("Failed to delete product");
 
       toast.success("Товар успешно удален");
-      await loadData();
+      await loadData(excursionId);
     } catch (error) {
       toast.error("Ошибка при удалении товара");
     } finally {
@@ -180,7 +187,7 @@ export default function ExcursionProductsPage({ params }: PageProps) {
               className="pl-10"
             />
           </div>
-          <Link href={`/admin/excursions/${params.id}/products/new`}>
+          <Link href={`/admin/excursions/${excursionId}/products/new`}>
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Добавить товар

@@ -1,14 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Booking from "@/models/Booking";
 
-export async function GET(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
-    const booking = await Booking.findById(context.params.id);
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid booking ID" },
+        { status: 400 }
+      );
+    }
+
+    const booking = await Booking.findById(id);
 
     if (!booking) {
       return NextResponse.json(
@@ -27,15 +32,20 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest) {
   try {
     await connectToDatabase();
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid booking ID" },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
     const booking = await Booking.findByIdAndUpdate(
-      context.params.id,
+      id,
       data,
       { new: true }
     );
@@ -57,13 +67,18 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     await connectToDatabase();
-    const booking = await Booking.findByIdAndDelete(context.params.id);
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid booking ID" },
+        { status: 400 }
+      );
+    }
+
+    const booking = await Booking.findByIdAndDelete(id);
 
     if (!booking) {
       return NextResponse.json(

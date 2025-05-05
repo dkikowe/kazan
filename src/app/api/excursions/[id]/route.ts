@@ -11,13 +11,18 @@ const connectDB = async () => {
 };
 
 // GET /api/excursions/[id]
-export async function GET(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const excursionCard = await ExcursionCard.findById(context.params.id).populate("tags categories");
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid excursion ID" },
+        { status: 400 }
+      );
+    }
+
+    const excursionCard = await ExcursionCard.findById(id).populate("tags categories");
 
     if (!excursionCard) {
       return NextResponse.json(
@@ -44,15 +49,20 @@ export async function GET(
 }
 
 // PUT /api/excursions/[id]
-export async function PUT(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest) {
   try {
     await connectDB();
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid excursion ID" },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
     const excursionCard = await ExcursionCard.findByIdAndUpdate(
-      context.params.id,
+      id,
       data,
       { new: true }
     ).populate("tags categories");
@@ -84,13 +94,18 @@ export async function PUT(
 }
 
 // DELETE /api/excursions/[id]
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
-    const excursionCard = await ExcursionCard.findByIdAndDelete(context.params.id);
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid excursion ID" },
+        { status: 400 }
+      );
+    }
+
+    const excursionCard = await ExcursionCard.findByIdAndDelete(id);
 
     if (!excursionCard) {
       return NextResponse.json(

@@ -1,14 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import ExcursionProduct from "@/models/ExcursionProduct";
 
-export async function GET(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
-    const product = await ExcursionProduct.findById(context.params.id);
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
+    const product = await ExcursionProduct.findById(id);
 
     if (!product) {
       return NextResponse.json(
@@ -27,12 +32,17 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest) {
   try {
     await connectToDatabase();
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
 
     // Преобразуем строковые даты в объекты Date
@@ -52,7 +62,7 @@ export async function PUT(
     }
 
     const product = await ExcursionProduct.findByIdAndUpdate(
-      context.params.id,
+      id,
       data,
       { new: true }
     );
@@ -74,13 +84,18 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     await connectToDatabase();
-    const product = await ExcursionProduct.findByIdAndDelete(context.params.id);
+    const id = request.url.split("/").pop();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
+    const product = await ExcursionProduct.findByIdAndDelete(id);
 
     if (!product) {
       return NextResponse.json(
