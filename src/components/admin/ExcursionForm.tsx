@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { excursionFormSchema, type ExcursionFormData } from "@/types/excursion";
-import { updateExcursion } from "@/lib/api/excursions";
 
 interface ExcursionFormProps {
   excursion: ExcursionFormData;
@@ -31,20 +30,99 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
 
   const form = useForm<ExcursionFormData>({
     resolver: zodResolver(excursionFormSchema),
-    defaultValues: excursion,
+    defaultValues: {
+      card: excursion.card || {
+        title: "",
+        seoTitle: "",
+        description: "",
+        whatYouWillSee: {
+          title: "",
+          items: [],
+        },
+        images: [],
+        reviews: [],
+        attractions: [],
+        tags: [],
+        categories: [],
+        isPublished: false,
+        commercialSlug: "",
+      },
+      commercial: excursion.commercial || {
+        schedule: [],
+        prices: [],
+        additionalServices: [],
+        promoCodes: [],
+      },
+    },
   });
+
+  useEffect(() => {
+    if (excursion) {
+      form.reset({
+        card: excursion.card || {
+          title: "",
+          seoTitle: "",
+          description: "",
+          whatYouWillSee: {
+            title: "",
+            items: [],
+          },
+          images: [],
+          reviews: [],
+          attractions: [],
+          tags: [],
+          categories: [],
+          isPublished: false,
+          commercialSlug: "",
+        },
+        commercial: excursion.commercial || {
+          schedule: [],
+          prices: [],
+          additionalServices: [],
+          promoCodes: [],
+        },
+      });
+    }
+  }, [excursion, form]);
 
   const onSubmit = async (values: ExcursionFormData) => {
     try {
       setSaving(true);
-      if (!excursion.card?.commercialSlug) {
-        throw new Error("Отсутствует commercialSlug");
+      if (!values.card?._id) {
+        throw new Error("Отсутствует ID экскурсии");
       }
-      await updateExcursion(excursion.card.commercialSlug, values);
+
+      const response = await fetch(`/api/excursions/${values.card._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          card: {
+            ...values.card,
+            whatYouWillSee: {
+              ...values.card.whatYouWillSee,
+              items: values.card.whatYouWillSee.items.filter(Boolean),
+            },
+          },
+          commercial: values.commercial,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Ошибка при обновлении экскурсии");
+      }
+
       toast.success("Экскурсия успешно обновлена");
       router.push("/admin/excursions");
     } catch (error) {
-      toast.error("Ошибка при обновлении экскурсии");
+      console.error("Error updating excursion:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Ошибка при обновлении экскурсии"
+      );
     } finally {
       setSaving(false);
     }

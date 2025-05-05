@@ -1,3 +1,5 @@
+"use client";
+
 import ReviewCarousel from "@/features/home/review/ui/carousel";
 import Article from "@/widgets/home/article";
 import Catalog from "@/widgets/home/catalog";

@@ -16,8 +16,6 @@ import {
   CreditCard,
   CheckCircle2,
 } from "lucide-react";
-import { ExcursionProduct } from "@/models/excursion-product";
-import { connectToDatabase } from "@/lib/mongodb";
 
 interface NavigationButtonsProps {
   id: string;
@@ -70,17 +68,63 @@ interface Group {
   price: number;
 }
 
-interface PageProps {
-  params: Promise<{ id: string }>;
+interface ExcursionProduct {
+  _id: string;
+  excursionCard: {
+    title: string;
+  };
+  dateRanges: DateRange[];
+  tickets: Ticket[];
+  meetingPoints: MeetingPoint[];
+  paymentOptions: PaymentOption[];
+  groups: Group[];
+  isPublished: boolean;
 }
 
-export default async function Page({ params }: PageProps) {
-  const { id } = await params;
-  await connectToDatabase();
-  const product = await ExcursionProduct.findById(id).populate("excursionCard");
+interface PageProps {
+  params: { id: string };
+}
+
+export default function Page({ params }: PageProps) {
+  const { id } = params;
+  const router = useRouter();
+  const [product, setProduct] = useState<ExcursionProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`/api/excursion-products/${id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch product");
+        }
+        const data = await response.json();
+        setProduct(data);
+      } catch (error) {
+        toast.error("Ошибка при загрузке товара");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   if (!product) {
-    throw new Error("Product not found");
+    return (
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-4">Товар не найден</h1>
+        <Button onClick={() => router.back()}>Назад</Button>
+      </div>
+    );
   }
 
   return (
@@ -94,7 +138,7 @@ export default async function Page({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product.dateRanges.map((range: DateRange, index: number) => (
+              {product.dateRanges.map((range, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   <span>
@@ -113,7 +157,7 @@ export default async function Page({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product.tickets.map((ticket: Ticket, index: number) => (
+              {product.tickets.map((ticket, index) => (
                 <div key={index} className="flex justify-between items-center">
                   <span>{ticket.type}</span>
                   <span className="font-medium">{ticket.price} ₽</span>
@@ -129,16 +173,14 @@ export default async function Page({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product.meetingPoints.map(
-                (point: MeetingPoint, index: number) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{point.location}</span>
-                    <Clock className="h-4 w-4 ml-2" />
-                    <span>{point.time}</span>
-                  </div>
-                )
-              )}
+              {product.meetingPoints.map((point, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{point.location}</span>
+                  <Clock className="h-4 w-4 ml-2" />
+                  <span>{point.time}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -149,19 +191,17 @@ export default async function Page({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product.paymentOptions.map(
-                (option: PaymentOption, index: number) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      <span className="font-medium">{option.type}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 ml-6">
-                      {option.description}
-                    </p>
+              {product.paymentOptions.map((option, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span className="font-medium">{option.type}</span>
                   </div>
-                )
-              )}
+                  <p className="text-sm text-gray-500 ml-6">
+                    {option.description}
+                  </p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -172,7 +212,7 @@ export default async function Page({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product.groups.map((group: Group, index: number) => (
+              {product.groups.map((group, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   <span>

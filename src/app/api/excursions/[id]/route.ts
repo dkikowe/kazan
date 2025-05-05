@@ -1,5 +1,4 @@
 import { connectToDatabase } from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { ExcursionCard } from "@/models/excursion-card";
@@ -12,121 +11,104 @@ const connectDB = async () => {
 };
 
 // GET /api/excursions/[id]
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const id = request.url.split("/").pop();
-    if (!id) {
+    await connectDB();
+    const excursionCard = await ExcursionCard.findById(context.params.id).populate("tags categories");
+
+    if (!excursionCard) {
       return NextResponse.json(
-        { error: "Invalid excursion ID" },
-        { status: 400 }
-      );
-    }
-
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-    
-    if (!db) {
-      throw new Error("Database connection not established");
-    }
-
-    const excursion = await db
-      .collection("excursions")
-      .findOne({ _id: new ObjectId(id) });
-
-    if (!excursion) {
-      return NextResponse.json(
-        { error: "Excursion not found" },
+        { error: "Экскурсия не найдена" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(excursion);
+    const commercial = await CommercialExcursion.findOne({
+      commercialSlug: excursionCard.commercialSlug,
+    });
+
+    return NextResponse.json({
+      card: excursionCard,
+      commercial: commercial || null,
+    });
   } catch (error) {
-    console.error("Error fetching excursion:", error);
+    console.error("Ошибка при получении экскурсии:", error);
     return NextResponse.json(
-      { error: "Failed to fetch excursion" },
+      { error: "Ошибка при получении экскурсии" },
       { status: 500 }
     );
   }
 }
 
 // PUT /api/excursions/[id]
-export async function PUT(request: NextRequest) {
+export async function PUT(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const id = request.url.split("/").pop();
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid excursion ID" },
-        { status: 400 }
-      );
-    }
-
+    await connectDB();
     const data = await request.json();
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-    
-    if (!db) {
-      throw new Error("Database connection not established");
-    }
+    const excursionCard = await ExcursionCard.findByIdAndUpdate(
+      context.params.id,
+      data,
+      { new: true }
+    ).populate("tags categories");
 
-    const result = await db
-      .collection("excursions")
-      .updateOne(
-        { _id: new ObjectId(id) },
-        { $set: data }
-      );
-
-    if (result.modifiedCount === 0) {
+    if (!excursionCard) {
       return NextResponse.json(
-        { error: "Excursion not found or not updated" },
+        { error: "Экскурсия не найдена" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    // Обновляем коммерческие данные
+    if (data.commercial) {
+      await CommercialExcursion.findOneAndUpdate(
+        { commercialSlug: excursionCard.commercialSlug },
+        data.commercial,
+        { new: true, upsert: true }
+      );
+    }
+
+    return NextResponse.json(excursionCard);
   } catch (error) {
-    console.error("Error updating excursion:", error);
+    console.error("Ошибка при обновлении экскурсии:", error);
     return NextResponse.json(
-      { error: "Failed to update excursion" },
+      { error: "Ошибка при обновлении экскурсии" },
       { status: 500 }
     );
   }
 }
 
 // DELETE /api/excursions/[id]
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const id = request.url.split("/").pop();
-    if (!id) {
+    await connectDB();
+    const excursionCard = await ExcursionCard.findByIdAndDelete(context.params.id);
+
+    if (!excursionCard) {
       return NextResponse.json(
-        { error: "Invalid excursion ID" },
-        { status: 400 }
-      );
-    }
-
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-    
-    if (!db) {
-      throw new Error("Database connection not established");
-    }
-
-    const result = await db
-      .collection("excursions")
-      .deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { error: "Excursion not found" },
+        { error: "Экскурсия не найдена" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    // Удаляем коммерческие данные
+    await CommercialExcursion.findOneAndDelete({
+      commercialSlug: excursionCard.commercialSlug,
+    });
+
+    return NextResponse.json({ message: "Экскурсия успешно удалена" });
   } catch (error) {
-    console.error("Error deleting excursion:", error);
+    console.error("Ошибка при удалении экскурсии:", error);
     return NextResponse.json(
-      { error: "Failed to delete excursion" },
+      { error: "Ошибка при удалении экскурсии" },
       { status: 500 }
     );
   }

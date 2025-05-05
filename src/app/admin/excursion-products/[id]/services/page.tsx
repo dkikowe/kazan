@@ -11,10 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-import { ExcursionProduct } from "@/models/excursion-product";
-import { connectToDatabase } from "@/lib/mongodb";
-import { ObjectId, Document } from "mongodb";
-import mongoose from "mongoose";
 
 const serviceSchema = z.object({
   title: z.string().min(1, "Название обязательно"),
@@ -38,18 +34,25 @@ interface IExcursionProduct {
 }
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
-export default async function ServicesPage({ params }: PageProps) {
-  const { id } = await params;
+export default function ServicesPage({ params }: PageProps) {
+  const { id } = params;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [product, setProduct] = useState<IExcursionProduct | null>(null);
   const [services, setServices] = useState<Service[]>([]);
 
-  // Fetch product data
+  const { register, handleSubmit, reset } = useForm<ServiceFormData>({
+    resolver: zodResolver(serviceSchema),
+  });
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
   const fetchProduct = async () => {
     try {
       const response = await fetch(`/api/excursion-products/${id}`);
@@ -58,15 +61,15 @@ export default async function ServicesPage({ params }: PageProps) {
       const data = await response.json();
       setProduct(data);
       setServices(data.services || []);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching product:", error);
+      toast.error("Ошибка при загрузке товара");
+    } finally {
       setLoading(false);
     }
   };
 
-  // Handle service operations
-  const addService = async (service: Service) => {
+  const onSubmit = async (data: ServiceFormData) => {
     if (!product) return;
     try {
       setSaving(true);
@@ -75,14 +78,18 @@ export default async function ServicesPage({ params }: PageProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(service),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) throw new Error("Failed to add service");
 
-      setServices([...services, service]);
+      const newService = await response.json();
+      setServices([...services, newService]);
+      reset();
+      toast.success("Услуга успешно добавлена");
     } catch (error) {
       console.error("Error adding service:", error);
+      toast.error("Ошибка при добавлении услуги");
     } finally {
       setSaving(false);
     }
@@ -102,55 +109,110 @@ export default async function ServicesPage({ params }: PageProps) {
       if (!response.ok) throw new Error("Failed to remove service");
 
       setServices(services.filter((s) => s._id !== service._id));
+      toast.success("Услуга успешно удалена");
     } catch (error) {
       console.error("Error removing service:", error);
+      toast.error("Ошибка при удалении услуги");
     } finally {
       setSaving(false);
     }
   };
 
-  // Load product data on mount
-  useEffect(() => {
-    fetchProduct();
-  }, []);
-
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="container mx-auto py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   if (!product) {
-    return <div>Product not found</div>;
+    return (
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-4">Товар не найден</h1>
+        <Button onClick={() => router.back()}>Назад</Button>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-4">Управление услугами</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Услуги для {product.title}
-        </h2>
-        {/* Services list */}
-        <div className="space-y-4">
-          {services.map((service) => (
-            <div
-              key={service._id}
-              className="flex items-center justify-between p-4 border rounded"
-            >
-              <div>
-                <h3 className="font-medium">{service.title}</h3>
-                <p className="text-gray-600">{service.description}</p>
-                <p className="text-sm font-medium">{service.price} ₸</p>
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+          className="hover:bg-muted"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-bold">Управление услугами</h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Добавить услугу</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Название</label>
+                <Input {...register("title")} />
               </div>
-              <button
-                onClick={() => removeService(service)}
-                className="text-red-500 hover:text-red-700"
-                disabled={saving}
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Описание</label>
+                <Textarea {...register("description")} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Цена</label>
+                <Input
+                  type="number"
+                  {...register("price", { valueAsNumber: true })}
+                />
+              </div>
+              <Button type="submit" disabled={saving}>
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить услугу
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Список услуг</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {services.map((service) => (
+                <div
+                  key={service._id}
+                  className="flex items-center justify-between p-4 border rounded"
+                >
+                  <div>
+                    <h3 className="font-medium">{service.title}</h3>
+                    <p className="text-gray-600">{service.description}</p>
+                    <p className="text-sm font-medium">{service.price} ₽</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeService(service)}
+                    disabled={saving}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              ))}
+              {services.length === 0 && (
+                <p className="text-center text-gray-500">
+                  Нет добавленных услуг
+                </p>
+              )}
             </div>
-          ))}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

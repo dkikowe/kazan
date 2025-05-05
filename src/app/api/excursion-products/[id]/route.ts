@@ -1,120 +1,99 @@
+import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
-import { NextRequest, NextResponse } from "next/server";
+import ExcursionProduct from "@/models/ExcursionProduct";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const id = request.url.split("/").pop();
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid product ID" },
-        { status: 400 }
-      );
-    }
-
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-    
-    if (!db) {
-      throw new Error("Database connection not established");
-    }
-
-    const product = await db
-      .collection("excursion-products")
-      .findOne({ _id: new ObjectId(id) });
+    await connectToDatabase();
+    const product = await ExcursionProduct.findById(context.params.id);
 
     if (!product) {
       return NextResponse.json(
-        { error: "Product not found" },
+        { error: "Товар не найден" },
         { status: 404 }
       );
     }
 
     return NextResponse.json(product);
   } catch (error) {
-    console.error("Error fetching product:", error);
+    console.error("Ошибка при получении товара:", error);
     return NextResponse.json(
-      { error: "Failed to fetch product" },
+      { error: "Ошибка при получении товара" },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const id = request.url.split("/").pop();
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid product ID" },
-        { status: 400 }
-      );
-    }
-
+    await connectToDatabase();
     const data = await request.json();
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-    
-    if (!db) {
-      throw new Error("Database connection not established");
+
+    // Преобразуем строковые даты в объекты Date
+    if (data.dateRanges) {
+      data.dateRanges = data.dateRanges.map((range: any) => ({
+        ...range,
+        startDate: new Date(range.startDate),
+        endDate: new Date(range.endDate)
+      }));
     }
 
-    const result = await db
-      .collection("excursion-products")
-      .updateOne(
-        { _id: new ObjectId(id) },
-        { $set: data }
-      );
+    if (data.groups) {
+      data.groups = data.groups.map((group: any) => ({
+        ...group,
+        date: new Date(group.date)
+      }));
+    }
 
-    if (result.modifiedCount === 0) {
+    const product = await ExcursionProduct.findByIdAndUpdate(
+      context.params.id,
+      data,
+      { new: true }
+    );
+
+    if (!product) {
       return NextResponse.json(
-        { error: "Product not found or not updated" },
+        { error: "Товар не найден" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(product);
   } catch (error) {
-    console.error("Error updating product:", error);
+    console.error("Ошибка при обновлении товара:", error);
     return NextResponse.json(
-      { error: "Failed to update product" },
+      { error: "Ошибка при обновлении товара" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const id = request.url.split("/").pop();
-    if (!id) {
+    await connectToDatabase();
+    const product = await ExcursionProduct.findByIdAndDelete(context.params.id);
+
+    if (!product) {
       return NextResponse.json(
-        { error: "Invalid product ID" },
-        { status: 400 }
-      );
-    }
-
-    const mongoose = await connectToDatabase();
-    const db = mongoose.connection.db;
-    
-    if (!db) {
-      throw new Error("Database connection not established");
-    }
-
-    const result = await db
-      .collection("excursion-products")
-      .deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { error: "Product not found" },
+        { error: "Товар не найден" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: "Товар успешно удален" });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("Ошибка при удалении товара:", error);
     return NextResponse.json(
-      { error: "Failed to delete product" },
+      { error: "Ошибка при удалении товара" },
       { status: 500 }
     );
   }

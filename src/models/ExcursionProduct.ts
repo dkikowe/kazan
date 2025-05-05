@@ -1,7 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IExcursionProduct extends Document {
-  excursionCard: mongoose.Types.ObjectId;
+  excursionCard: {
+    _id: string;
+    title: string;
+  };
   services: {
     type: 'transport' | 'guide' | 'ticket' | 'lunch' | 'audioguide' | 'additional';
     subtype: string;
@@ -32,14 +35,21 @@ export interface IExcursionProduct extends Document {
   paymentOptions: {
     type: 'full' | 'prepayment' | 'onsite';
     prepaymentPercent?: number;
+    description?: string;
+  }[];
+  additionalServices: {
+    name: string;
+    price: number;
+    description?: string;
   }[];
   groups: {
     date: Date;
     time: string;
-    meetingPoint: mongoose.Types.ObjectId;
+    meetingPoint: string;
     maxSize: number;
     autoStop: boolean;
   }[];
+  isPublished: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,9 +57,8 @@ export interface IExcursionProduct extends Document {
 const ExcursionProductSchema = new Schema<IExcursionProduct>(
   {
     excursionCard: {
-      type: Schema.Types.ObjectId,
-      ref: 'ExcursionCard',
-      required: true,
+      _id: { type: String, required: true },
+      title: { type: String, required: true },
     },
     services: [{
       type: {
@@ -135,6 +144,12 @@ const ExcursionProductSchema = new Schema<IExcursionProduct>(
         min: 0,
         max: 100,
       },
+      description: { type: String },
+    }],
+    additionalServices: [{
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
+      description: { type: String },
     }],
     groups: [{
       date: {
@@ -145,20 +160,17 @@ const ExcursionProductSchema = new Schema<IExcursionProduct>(
         type: String,
         required: true,
       },
-      meetingPoint: {
-        type: Schema.Types.ObjectId,
-        ref: 'MeetingPoint',
-        required: true,
-      },
+      meetingPoint: { type: String, required: true },
       maxSize: {
         type: Number,
         required: true,
       },
       autoStop: {
         type: Boolean,
-        default: false,
+        required: true,
       },
     }],
+    isPublished: { type: Boolean, default: false },
   },
   {
     timestamps: true,

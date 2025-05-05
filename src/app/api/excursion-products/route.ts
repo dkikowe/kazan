@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import mongoose from "mongoose";
-import { ExcursionProduct } from "@/models/excursion-product";
+import ExcursionProduct from "@/models/ExcursionProduct";
 
 // Подключение к MongoDB
 const connectDB = async () => {
