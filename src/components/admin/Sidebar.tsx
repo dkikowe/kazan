@@ -17,18 +17,13 @@ const navigation = [
   { name: "Главная", href: "/admin/dashboard", icon: HomeIcon },
   { name: "Категории", href: "/admin/categories", icon: TagIcon },
   { name: "Экскурсии", href: "/admin/excursions", icon: CalendarIcon },
-  {
-    name: "Справочники",
-    href: "/admin/references",
-    icon: ClipboardDocumentListIcon,
-  },
+
   { name: "Группы", href: "/admin/groups", icon: UserGroupIcon },
   {
     name: "Заявки",
-    href: "/admin/applications",
+    href: "/admin/bookings",
     icon: ClipboardDocumentCheckIcon,
   },
-  { name: "Настройки", href: "/admin/settings", icon: CogIcon },
 ];
 
 export default function Sidebar() {
