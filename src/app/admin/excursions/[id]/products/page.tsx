@@ -211,7 +211,7 @@ export default function ExcursionProductsPage({ params }: PageProps) {
                   </div>
                   <div className="flex gap-2">
                     <Link
-                      href={`/admin/excursion-products/${product._id}/edit`}
+                      href={`/admin/excursions/${excursionId}/products/${product._id}/edit`}
                     >
                       <Button variant="ghost" size="icon">
                         <Pencil className="h-4 w-4" />

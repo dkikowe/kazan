@@ -130,9 +130,14 @@ interface ExcursionProduct {
 interface EditFormProps {
   id: string;
   initialData: ProductFormData;
+  excursionId?: string;
 }
 
-export default function EditForm({ id, initialData }: EditFormProps) {
+export default function EditForm({
+  id,
+  initialData,
+  excursionId,
+}: EditFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
 
@@ -155,7 +160,11 @@ export default function EditForm({ id, initialData }: EditFormProps) {
       if (!response.ok) throw new Error("Failed to update product");
 
       toast.success("Товар успешно обновлен");
-      router.push(`/admin/excursion-products/${id}`);
+      if (excursionId) {
+        router.push(`/admin/excursions/${excursionId}/products`);
+      } else {
+        router.push(`/admin/excursion-products/${id}`);
+      }
     } catch (error) {
       toast.error("Ошибка при обновлении товара");
     } finally {

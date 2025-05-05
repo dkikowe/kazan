@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import EditForm from "./edit-form";
 import { ProductFormData } from "./edit-form";
+import { toast } from "sonner";
 
 interface IExcursionProduct {
   _id: string;
@@ -56,17 +57,22 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function EditProductPage({ params }: PageProps) {
-  const { id } = await params;
+export default function EditProductPage({ params }: PageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<ProductFormData | null>(null);
+  const [productId, setProductId] = useState<string>("");
 
   useEffect(() => {
-    fetchProduct();
-  }, [id]);
+    const init = async () => {
+      const { id } = await params;
+      setProductId(id);
+      await fetchProduct(id);
+    };
+    init();
+  }, [params]);
 
-  const fetchProduct = async () => {
+  const fetchProduct = async (id: string) => {
     try {
       const response = await fetch(`/api/excursion-products/${id}`);
       if (!response.ok) throw new Error("Failed to fetch product");
@@ -97,6 +103,7 @@ export default async function EditProductPage({ params }: PageProps) {
       setProduct(formData);
     } catch (error) {
       console.error("Error fetching product:", error);
+      toast.error("Ошибка при загрузке товара");
     } finally {
       setLoading(false);
     }
@@ -119,5 +126,15 @@ export default async function EditProductPage({ params }: PageProps) {
     );
   }
 
-  return <EditForm id={id} initialData={product} />;
+  return (
+    <div className="container mx-auto py-8">
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="outline" size="icon" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-bold">Редактирование товара</h1>
+      </div>
+      <EditForm id={productId} initialData={product} />
+    </div>
+  );
 }
