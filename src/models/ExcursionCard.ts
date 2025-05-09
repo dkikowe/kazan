@@ -37,12 +37,12 @@ const ExcursionCardSchema = new Schema({
   },
   seoTitle: {
     type: String,
-    required: [true, 'SEO заголовок обязателен'],
+    required: false,
     trim: true,
   },
   description: {
     type: String,
-    required: [true, 'Описание обязательно'],
+    required: false,
     trim: true,
   },
   images: [{
@@ -54,11 +54,11 @@ const ExcursionCardSchema = new Schema({
   whatYouWillSee: {
     title: {
       type: String,
-      required: [true, 'Заголовок блока "Что вы увидите" обязателен'],
+      required: false,
     },
     items: [{
       type: String,
-      required: [true, 'Пункт "Что вы увидите" обязателен'],
+      required: false,
     }],
   },
   reviews: [{
@@ -88,17 +88,17 @@ const ExcursionCardSchema = new Schema({
   },
   commercialSlug: {
     type: String,
-    required: [true, 'Slug коммерческой части обязателен'],
+    required: false,
     unique: true,
   },
   excursionProduct: {
     _id: {
       type: String,
-      required: [true, 'ID товара экскурсии обязателен'],
+      required: false,
     },
     title: {
       type: String,
-      required: [true, 'Название товара экскурсии обязательно'],
+      required: false,
     },
   },
 }, {

@@ -33,9 +33,11 @@ import {
 
 interface ExcursionProduct {
   _id: string;
-  excursionCard: {
-    title: string;
-    description: string;
+  title: string;
+  excursionCard?: {
+    _id?: string;
+    title?: string;
+    description?: string;
   };
   tickets: Array<{
     type: string;
@@ -128,11 +130,29 @@ export default function ExcursionProductsPage() {
     setDeleteProductId(id);
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.excursionCard?.title
-      ?.toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    // Если задан поисковый запрос
+    if (searchQuery) {
+      // Ищем в названии товара
+      if (product.title?.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return true;
+      }
+
+      // Если есть привязанная экскурсия, ищем в её названии
+      if (
+        product.excursionCard?.title
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      ) {
+        return true;
+      }
+
+      return false;
+    }
+
+    // Если поисковый запрос не задан, показываем все товары
+    return true;
+  });
 
   // Функция для отображения форматированной даты
   const formatDate = (dateString: string) => {
@@ -206,10 +226,14 @@ export default function ExcursionProductsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <CardTitle className="line-clamp-1">
-                      {product.excursionCard?.title || "Без названия"}
+                      {product.title || "Товар без названия"}
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
-                      {product.excursionCard?.description || "Без описания"}
+                      {product.excursionCard
+                        ? `Привязан к экскурсии: ${
+                            product.excursionCard.title || "Без названия"
+                          }`
+                        : "Товар без привязанной экскурсии"}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">

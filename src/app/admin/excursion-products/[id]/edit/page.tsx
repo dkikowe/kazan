@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 interface IExcursionProduct {
   _id: string;
+  title: string;
   excursionCard: {
     _id: string;
     title: string;
@@ -107,6 +108,7 @@ export default function EditProductPage({ params }: PageProps) {
       // Преобразуем данные в формат формы
       const formData: ProductFormData = {
         excursionCard: data.excursionCard?._id || data.excursionCard || "",
+        title: data.title || "",
         services: data.services || [],
         dateRanges: (data.dateRanges || []).map((range: any) => ({
           start: new Date(range.start),

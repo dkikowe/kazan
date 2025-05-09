@@ -32,6 +32,7 @@ import {
 
 const productFormSchema = z.object({
   excursionCard: z.string(),
+  title: z.string().min(1, "Название товара обязательно"),
   services: z.array(
     z.object({
       type: z.enum([
@@ -176,14 +177,7 @@ export default function EditForm({
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">Редактирование товара</h1>
-      </div>
-
+    <div className="container">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card>
@@ -191,6 +185,19 @@ export default function EditForm({
               <CardTitle>Основная информация</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Название товара</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Введите название товара" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="isPublished"

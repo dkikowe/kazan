@@ -237,9 +237,12 @@ export default function ExcursionProductsPage({ params }: PageProps) {
                     <div>
                       <CardTitle className="text-lg font-bold flex items-center">
                         {product.title ||
-                          `Товар экскурсии #${product._id.substring(
-                            product._id.length - 5
-                          )}`}
+                          (product.excursionCard &&
+                          typeof product.excursionCard === "object"
+                            ? `Товар для "${product.excursionCard.title}"`
+                            : `Товар экскурсии #${product._id.substring(
+                                product._id.length - 5
+                              )}`)}
                       </CardTitle>
                       <CardDescription>
                         {product.dateRanges.length} периодов продаж •{" "}

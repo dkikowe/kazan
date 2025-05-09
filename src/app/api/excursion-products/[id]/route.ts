@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import ExcursionProduct from "@/models/ExcursionProduct";
+import ExcursionCard from "@/models/ExcursionCard";
 import mongoose from "mongoose";
+// Импортируем связанные модели для регистрации в Mongoose
+import Tag from "@/models/Tag";
+import FilterItem from "@/models/FilterItem";
+import FilterGroup from "@/models/FilterGroup";
+// Регистрируем модель Excursion в mongoose
+// @ts-ignore: игнорируем ошибку для этого импорта
+import excursionModel from "../../../models/Excursion";
 
 export async function GET(
   request: Request,
@@ -52,14 +60,14 @@ export async function PUT(
     }
 
     // Проверяем обязательные поля
-    if (!data.excursionCard) {
-      console.error("Отсутствует ID экскурсии");
+    if (!data.title) {
+      console.error("Отсутствует название товара");
       return NextResponse.json(
-        { error: "ID экскурсии обязателен" },
+        { error: "Название товара обязательно" },
         { status: 400 }
       );
     }
-
+    
     if (!data.startTimes || data.startTimes.length === 0) {
       console.error("Отсутствуют времена начала");
       return NextResponse.json(
@@ -76,41 +84,19 @@ export async function PUT(
       );
     }
 
-    // Проверяем существование экскурсии
-    try {
-      const db = mongoose.connection.db;
-      if (!db) {
-        console.error("Не удалось получить объект базы данных");
-        return NextResponse.json(
-          { error: "Ошибка подключения к базе данных" },
-          { status: 500 }
-        );
-      }
-      
-      const excursion = await db.collection("excursioncards").findOne({
-        _id: new mongoose.Types.ObjectId(data.excursionCard)
-      });
-
-      if (!excursion) {
-        console.error(`Экскурсия с ID ${data.excursionCard} не найдена`);
-        return NextResponse.json(
-          { error: `Экскурсия с ID ${data.excursionCard} не найдена` },
-          { status: 404 }
-        );
-      }
-      console.log(`Экскурсия с ID ${data.excursionCard} найдена: ${excursion.title}`);
-    } catch (err) {
-      console.error("Ошибка при проверке существования экскурсии:", err);
-      return NextResponse.json(
-        { error: "Ошибка при проверке существования экскурсии" },
-        { status: 500 }
-      );
+    // Подготавливаем данные для обновления
+    const updateData = { ...data };
+    
+    // Если excursionCard пустая строка, заменяем на null
+    if (updateData.excursionCard === "") {
+      updateData.excursionCard = null;
+      console.log("Пустое значение excursionCard заменено на null");
     }
 
     // Обновляем товар
     const product = await ExcursionProduct.findByIdAndUpdate(
       params.id,
-      data,
+      updateData,
       { new: true }
     );
 

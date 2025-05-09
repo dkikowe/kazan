@@ -71,4 +71,4 @@ const excursionSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-export default mongoose.models.Excursion || mongoose.model('Excursion', excursionSchema); 
+export default mongoose.models.Excursion || mongoose.model('Excursion', excursionSchema);

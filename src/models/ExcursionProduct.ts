@@ -5,7 +5,7 @@ export interface IExcursionProduct extends Document {
     type: mongoose.Schema.Types.ObjectId;
     ref: 'ExcursionCard';
   };
-  title?: string;
+  title: string;
   services: Array<{
     type: string;
     subtype: string;

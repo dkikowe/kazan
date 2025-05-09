@@ -54,7 +54,8 @@ const transportSubtypes = [
 ] as const;
 
 const productFormSchema = z.object({
-  excursionCard: z.string(),
+  excursionCard: z.string().optional(),
+  title: z.string().min(1, "Название товара обязательно"),
   services: z.array(
     z.object({
       type: z.enum([
@@ -128,7 +129,8 @@ const productFormSchema = z.object({
 type ProductFormData = z.infer<typeof productFormSchema>;
 
 type FormValues = {
-  excursionCard: string;
+  excursionCard?: string;
+  title: string;
   services: Array<{
     type:
       | "transport"
@@ -379,6 +381,7 @@ export default function EditProductPage({ params }: PageProps) {
       // Преобразуем данные в формат формы
       const formData = {
         excursionCard: data.excursionCard?._id || data.excursionCard || "",
+        title: data.title || "",
         services: data.services || [],
         dateRanges: (data.dateRanges || []).map((range: any) => ({
           start: new Date(range.start),
@@ -504,6 +507,20 @@ export default function EditProductPage({ params }: PageProps) {
               <CardTitle>Основная информация</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Название товара</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Введите название товара" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="isPublished"

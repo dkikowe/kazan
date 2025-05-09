@@ -1,7 +1,15 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
+import ExcursionCard from "@/models/ExcursionCard";
 import mongoose from "mongoose";
+// Импортируем все связанные модели для регистрации в Mongoose
+import Tag from "@/models/Tag";
+import FilterItem from "@/models/FilterItem";
+import FilterGroup from "@/models/FilterGroup";
+// Регистрируем модель Excursion в mongoose
+// @ts-ignore: игнорируем ошибку для этого импорта
+import excursionModel from "../../models/Excursion";
 
 // GET /api/excursion-products
 export async function GET(request: Request) {

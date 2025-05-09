@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import ExcursionProduct from "@/models/ExcursionProduct";
+import ExcursionCard from "@/models/ExcursionCard";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "@/lib/mongodb";
+// Импортируем связанные модели для регистрации в Mongoose
+import Tag from "@/models/Tag";
+import FilterItem from "@/models/FilterItem";
+import FilterGroup from "@/models/FilterGroup";
+// Регистрируем модель Excursion в mongoose
+// @ts-ignore: игнорируем ошибку для этого импорта
+import excursionModel from "../../../models/Excursion";
 
 // GET /api/excursions/[id]
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDatabase();
     console.log("Получение данных экскурсии...");
     
-    const id = request.url.split("/").pop();
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid excursion ID" },
-        { status: 400 }
-      );
-    }
-    
+    const id = params.id;
     console.log(`Запрашиваемый ID: ${id}`);
     
     const db = mongoose.connection.db;
@@ -71,48 +75,22 @@ export async function GET(request: NextRequest) {
 }
 
 // PUT /api/excursions/[id]
-export async function PUT(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDatabase();
     console.log("Обновление данных экскурсии...");
     
-    const id = request.url.split("/").pop();
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid excursion ID" },
-        { status: 400 }
-      );
-    }
-    
+    const id = params.id;
     console.log(`Обновляемый ID: ${id}`);
     
     const data = await request.json();
-    console.log("Данные для обновления:", JSON.stringify(data, null, 2));
+    console.log("Данные для обновления получены");
     
-    const db = mongoose.connection.db;
-    if (!db) {
-      console.error("Не удалось получить объект базы данных");
-      return NextResponse.json(
-        { error: "Ошибка подключения к базе данных" },
-        { status: 500 }
-      );
-    }
-    
-    let objectId;
-    try {
-      objectId = new ObjectId(id);
-    } catch (error) {
-      console.error("Некорректный ID:", error);
-      return NextResponse.json(
-        { error: "Некорректный ID экскурсии" },
-        { status: 400 }
-      );
-    }
-
-    // Проверяем существование товара экскурсии
+    // Проверка товара экскурсии
     if (data.card?.excursionProduct) {
-      console.log(`Проверяем товар экскурсии: ${data.card.excursionProduct}`);
-      
       try {
         const productId = data.card.excursionProduct;
         
@@ -125,73 +103,78 @@ export async function PUT(request: NextRequest) {
         } else {
           // Иначе ищем товар по ID
           const product = await ExcursionProduct.findById(productId).lean();
-          if (!product) {
-            console.error("Товар экскурсии не найден");
-            console.log("Пропускаем обработку товара экскурсии и продолжаем обновление");
-            // Удаляем ссылку на несуществующий товар
-            delete data.card.excursionProduct;
-          } else {
-            // Добавляем информацию о товаре в карточку экскурсии
+          if (product) {
             data.card.excursionProduct = {
               _id: String(product._id),
-              title: String(product.title || ''),
+              title: String(product.title || 'Без названия'),
             };
+          } else {
+            // Удаляем ссылку на несуществующий товар
+            delete data.card.excursionProduct;
           }
         }
       } catch (err) {
-        console.error("Ошибка при поиске товара экскурсии:", err);
-        console.log("Пропускаем обработку товара экскурсии и продолжаем обновление");
+        console.error("Ошибка при обработке товара экскурсии:", err);
         // Удаляем ссылку на проблемный товар
         delete data.card.excursionProduct;
       }
+    } else if (data.card && 'excursionProduct' in data.card && !data.card.excursionProduct) {
+      delete data.card.excursionProduct;
     }
     
-    // Подготавливаем данные для обновления
+    // Подготавливаем данные
     const updateData = {
       ...data.card,
-      updatedAt: new Date()
     };
     
-    // Обновляем экскурсию в коллекции
-    const result = await db.collection("excursioncards").findOneAndUpdate(
-      { _id: objectId },
-      { $set: updateData },
-      { returnDocument: "after" }
-    );
-    
-    console.log("Результат обновления экскурсии:", result ? "Успешно" : "Не найдена");
-    
-    if (!result || !result.value) {
+    // Обновляем экскурсию используя модель Mongoose
+    try {
+      // Используем модель ExcursionCard вместо прямого обращения к коллекции
+      const updatedExcursion = await ExcursionCard.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true, runValidators: false }
+      ).lean();
+      
+      if (!updatedExcursion) {
+        console.error(`Экскурсия с ID ${id} не найдена`);
+        return NextResponse.json(
+          { error: "Экскурсия не найдена" },
+          { status: 404 }
+        );
+      }
+      
+      // Обновляем коммерческие данные если есть
+      if (data.commercial && updatedExcursion && 'commercialSlug' in updatedExcursion && updatedExcursion.commercialSlug) {
+        const db = mongoose.connection.db;
+        if (db) {
+          const commercialData = {
+            ...data.commercial,
+            updatedAt: new Date()
+          };
+          
+          await db.collection("commercialexcursions").updateOne(
+            { commercialSlug: updatedExcursion.commercialSlug },
+            { 
+              $set: commercialData,
+              $setOnInsert: { createdAt: new Date() }
+            },
+            { upsert: true }
+          );
+        }
+      }
+      
+      console.log(`Экскурсия с ID ${id} успешно обновлена`);
+      return NextResponse.json(updatedExcursion);
+    } catch (err) {
+      console.error("Ошибка при обновлении экскурсии:", err);
       return NextResponse.json(
-        { error: "Экскурсия не найдена или не обновлена" },
-        { status: 404 }
+        { error: "Ошибка при обновлении экскурсии", details: err instanceof Error ? err.message : String(err) },
+        { status: 500 }
       );
     }
-
-    // Обновляем коммерческие данные
-    if (data.commercial) {
-      console.log("Обновляем коммерческие данные...");
-      
-      const commercialData = {
-        ...data.commercial,
-        updatedAt: new Date()
-      };
-      
-      const commercialResult = await db.collection("commercialexcursions").findOneAndUpdate(
-        { commercialSlug: result.value.commercialSlug },
-        { 
-          $set: commercialData,
-          $setOnInsert: { createdAt: new Date() }
-        },
-        { upsert: true, returnDocument: "after" }
-      );
-      
-      console.log("Результат обновления коммерческих данных:", commercialResult ? "Успешно" : "Ошибка");
-    }
-
-    return NextResponse.json(result.value);
   } catch (error) {
-    console.error("Ошибка при обновлении экскурсии:", error);
+    console.error("Ошибка при обработке запроса:", error);
     return NextResponse.json(
       { error: "Ошибка при обновлении экскурсии", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
@@ -200,19 +183,15 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE /api/excursions/[id]
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDatabase();
     console.log("Удаление экскурсии...");
     
-    const id = request.url.split("/").pop();
-    if (!id) {
-      return NextResponse.json(
-        { error: "Invalid excursion ID" },
-        { status: 400 }
-      );
-    }
-    
+    const id = params.id;
     console.log(`Удаляемый ID: ${id}`);
     
     const db = mongoose.connection.db;
