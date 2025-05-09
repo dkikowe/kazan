@@ -1,6 +1,6 @@
 "use client";
 
-import { catalogCard } from "../data/card-data";
+import { useState, useEffect } from "react";
 import { CatalogAside, CatalogAsideMobile } from "./aside";
 import CatalogCard from "./card";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,8 +14,72 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+// Определяем тип данных экскурсии
+interface ExcursionProduct {
+  _id: string;
+  title: string;
+  startTimes: string[];
+  tickets: Array<{
+    type: string;
+    name: string;
+    price: number;
+  }>;
+}
+
+interface Excursion {
+  _id: string;
+  title: string;
+  description: string;
+  images: string[];
+  isPublished: boolean;
+  excursionProduct?: {
+    _id: string;
+    title: string;
+  };
+}
+
 const FilterSection = () => {
   const isMobile = useIsMobile();
+  const [excursions, setExcursions] = useState<Excursion[]>([]);
+  const [excursionProducts, setExcursionProducts] = useState<
+    Record<string, ExcursionProduct>
+  >({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExcursions = async () => {
+      try {
+        // Получаем данные экскурсий
+        const excursionsRes = await fetch("/api/excursions");
+        const excursionsData = await excursionsRes.json();
+
+        // Фильтруем только опубликованные экскурсии
+        const publishedExcursions = excursionsData.filter(
+          (excursion: Excursion) => excursion.isPublished
+        );
+
+        setExcursions(publishedExcursions);
+
+        // Получаем все товары экскурсий
+        const productsRes = await fetch("/api/excursion-products");
+        const productsData = await productsRes.json();
+
+        // Создаем хэш-таблицу товаров для быстрого доступа
+        const productsMap: Record<string, ExcursionProduct> = {};
+        productsData.forEach((product: ExcursionProduct) => {
+          productsMap[product._id] = product;
+        });
+
+        setExcursionProducts(productsMap);
+      } catch (error) {
+        console.error("Ошибка при получении данных:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExcursions();
+  }, []);
 
   return (
     <section className="max-w-[1440px] mx-auto">
@@ -27,9 +91,69 @@ const FilterSection = () => {
         <div className="grid gap-[1.5rem] lg:grid-cols-[18vw_1fr]">
           {isMobile ? <CatalogAsideMobile /> : <CatalogAside />}
           <div className="grid gap-[1.5rem] md:grid-cols-2 lg:grid-cols-3">
-            {catalogCard.map((card) => (
-              <CatalogCard key={card.id} {...card} />
-            ))}
+            {loading ? (
+              <div className="col-span-full flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            ) : excursions.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                Экскурсии не найдены
+              </div>
+            ) : (
+              excursions.map((excursion) => {
+                // Получаем связанный товар для экскурсии
+                const product =
+                  excursion.excursionProduct && excursion.excursionProduct._id
+                    ? excursionProducts[excursion.excursionProduct._id]
+                    : null;
+
+                // Используем первое изображение экскурсии или заглушку
+                const imageUrl =
+                  excursion.images && excursion.images.length > 0
+                    ? excursion.images[0]
+                    : "/images/catalog-filter/catalog1.png";
+
+                // Формируем объект с ценами, исходя из типов билетов
+                const prices = {
+                  adult: "Уточняйте",
+                  child: "Уточняйте",
+                  retired: "Уточняйте",
+                  childUnder7: "Уточняйте",
+                };
+
+                if (product && product.tickets) {
+                  product.tickets.forEach((ticket) => {
+                    if (ticket.type === "adult") {
+                      prices.adult = `от ${ticket.price} ₽`;
+                    } else if (ticket.type === "child") {
+                      prices.child = `от ${ticket.price} ₽`;
+                    } else if (
+                      ticket.name.toLowerCase().includes("пенсионер")
+                    ) {
+                      prices.retired = `от ${ticket.price} ₽`;
+                    } else if (ticket.name.toLowerCase().includes("до 7")) {
+                      prices.childUnder7 =
+                        ticket.price === 0
+                          ? "Бесплатно"
+                          : `от ${ticket.price} ₽`;
+                    }
+                  });
+                }
+
+                return (
+                  <CatalogCard
+                    key={excursion._id}
+                    id={excursion._id}
+                    imageUrl={imageUrl}
+                    duration="2 часа" // Заглушка для длительности
+                    rating={4.9} // Заглушка для рейтинга
+                    title={excursion.title}
+                    times={product ? product.startTimes : ["Уточняйте"]}
+                    prices={prices}
+                  />
+                );
+              })
+            )}
             <Pagination className="col-span-full lg:hidden">
               <PaginationContent>
                 <PaginationItem>

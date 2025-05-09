@@ -17,10 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import NavbarDark from "@/widgets/navbar-dark";
 import Hero from "@/widgets/home/hero";
 import Link from "next/link";
-
-// Выберем ID экскурсии для Казанского кремля - это будет ID по умолчанию
-// В реальном приложении можно использовать более гибкий подход с роутингом
-const DEFAULT_EXCURSION_ID = "65f14a8e68cb82f12499b81e"; // Замените на реальный ID экскурсии о Казанском кремле
+import { useParams } from "next/navigation";
 
 interface ExcursionProduct {
   _id: string;
@@ -87,8 +84,11 @@ const defaultExcursionDetails = {
   },
 };
 
-export default function WhereToGo() {
+export default function WhereToGoPage() {
   const isMobile = useIsMobile();
+  const params = useParams();
+  const id = params.id as string;
+
   const [excursion, setExcursion] = useState<Excursion | null>(null);
   const [product, setProduct] = useState<ExcursionProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,10 +103,8 @@ export default function WhereToGo() {
         setLoading(true);
         setError(null);
 
-        // Получаем данные экскурсии
-        const excursionRes = await fetch(
-          `/api/excursions/${DEFAULT_EXCURSION_ID}`
-        );
+        // Получаем данные экскурсии по ID из URL
+        const excursionRes = await fetch(`/api/excursions/${id}`);
 
         if (!excursionRes.ok) {
           throw new Error("Не удалось загрузить данные экскурсии");
@@ -192,8 +190,10 @@ export default function WhereToGo() {
       }
     };
 
-    fetchExcursionData();
-  }, []);
+    if (id) {
+      fetchExcursionData();
+    }
+  }, [id]);
 
   return (
     <main className="bg-white overflow-x-hidden">
@@ -225,7 +225,7 @@ export default function WhereToGo() {
             <div className="w-1 h-1 rounded-full bg-[#6E7279]" />
 
             <Link
-              href="/where-to-go"
+              href={`/where-to-go/${id}`}
               className="text-[#000000] text-[14px] md:text-[16px]"
             >
               {excursionDetails.title}

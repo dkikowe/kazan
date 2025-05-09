@@ -23,6 +23,16 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { IBooking } from "@/models/Booking";
 
+// Обновляем интерфейс для типизации продукта на странице админки
+interface BookingWithPopulated extends Omit<IBooking, "excursionId"> {
+  excursionId?:
+    | {
+        _id: string;
+        title: string;
+      }
+    | string;
+}
+
 const statusLabels = {
   new: "Новая",
   processed: "Обработана",
@@ -51,7 +61,7 @@ const paymentTypeLabels = {
 
 export default function BookingsPage() {
   const router = useRouter();
-  const [bookings, setBookings] = useState<IBooking[]>([]);
+  const [bookings, setBookings] = useState<BookingWithPopulated[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -127,7 +137,9 @@ export default function BookingsPage() {
             <TableRow>
               <TableHead>ФИО</TableHead>
               <TableHead>Телефон</TableHead>
-              <TableHead>Тип билета</TableHead>
+              <TableHead>Экскурсия</TableHead>
+              <TableHead>Билеты</TableHead>
+              <TableHead>Дата/Время</TableHead>
               <TableHead>Тип оплаты</TableHead>
               <TableHead>Статус</TableHead>
               <TableHead>Дата создания</TableHead>
@@ -139,7 +151,32 @@ export default function BookingsPage() {
               <TableRow key={booking._id}>
                 <TableCell>{booking.fullName}</TableCell>
                 <TableCell>{booking.phone}</TableCell>
-                <TableCell>{ticketTypeLabels[booking.ticketType]}</TableCell>
+                <TableCell>
+                  {booking.excursionId &&
+                  typeof booking.excursionId === "object"
+                    ? booking.excursionId.title
+                    : "Не указана"}
+                </TableCell>
+                <TableCell>
+                  {booking.tickets && booking.tickets.length > 0 ? (
+                    <div className="space-y-1">
+                      {booking.tickets.map((ticket, idx) => (
+                        <div key={idx} className="text-sm">
+                          {ticketTypeLabels[ticket.type]}: {ticket.count} шт.
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    "Не указаны"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {booking.date
+                    ? `${booking.date}${
+                        booking.time ? `, ${booking.time}` : ""
+                      }`
+                    : "Не указаны"}
+                </TableCell>
                 <TableCell>{paymentTypeLabels[booking.paymentType]}</TableCell>
                 <TableCell>
                   <Badge
