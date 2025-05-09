@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { ICategory } from './Category';
 import { ITag } from './Tag';
+import { IFilterItem } from './FilterItem';
 
 export interface IExcursionCard extends Document {
   title: string;
@@ -20,9 +20,13 @@ export interface IExcursionCard extends Document {
   }>;
   attractions: string[];
   tags: ITag[];
-  categories: ICategory[];
+  filterItems: IFilterItem[];
   isPublished: boolean;
   commercialSlug: string;
+  excursionProduct: {
+    _id: string;
+    title: string;
+  };
 }
 
 const ExcursionCardSchema = new Schema({
@@ -74,9 +78,9 @@ const ExcursionCardSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Tag',
   }],
-  categories: [{
+  filterItems: [{
     type: Schema.Types.ObjectId,
-    ref: 'Category',
+    ref: 'FilterItem',
   }],
   isPublished: {
     type: Boolean,
@@ -86,6 +90,16 @@ const ExcursionCardSchema = new Schema({
     type: String,
     required: [true, 'Slug коммерческой части обязателен'],
     unique: true,
+  },
+  excursionProduct: {
+    _id: {
+      type: String,
+      required: [true, 'ID товара экскурсии обязателен'],
+    },
+    title: {
+      type: String,
+      required: [true, 'Название товара экскурсии обязательно'],
+    },
   },
 }, {
   timestamps: true,

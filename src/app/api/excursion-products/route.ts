@@ -1,51 +1,101 @@
-import { NextRequest } from "next/server";
-import mongoose from "mongoose";
+import { connectToDatabase } from "@/lib/mongodb";
+import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
-
-// Подключение к MongoDB
-const connectDB = async () => {
-  if (mongoose.connections[0].readyState) return;
-  await mongoose.connect(process.env.MONGODB_URI || '');
-};
+import mongoose from "mongoose";
 
 // GET /api/excursion-products
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    await connectDB();
-    const products = await ExcursionProduct.find()
-      .populate('excursionCard')
-      .sort({ createdAt: -1 });
+    await connectToDatabase();
     
-    return new Response(
-      JSON.stringify(products),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    console.error("Error fetching excursion products:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to fetch excursion products" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    // Получаем параметры запроса
+    const { searchParams } = new URL(request.url);
+    const excursionId = searchParams.get('excursionId');
+
+    console.log(`Запрос товаров экскурсий${excursionId ? ` для экскурсии ${excursionId}` : ''}`);
+
+    // Формируем условие поиска
+    const query = excursionId ? { excursionCard: excursionId } : {};
+
+    const products = await ExcursionProduct.find(query)
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'excursionCard',
+        select: 'title',
+        model: 'ExcursionCard'
+      });
+
+    console.log(`Найдено ${products.length} товаров экскурсий`);
+    return NextResponse.json(products);
+  } catch (error: any) {
+    console.error("Ошибка при запросе товаров экскурсий:", error);
+    return NextResponse.json(
+      { error: error.message || "Не удалось получить товары экскурсий" },
+      { status: 500 }
     );
   }
 }
 
 // POST /api/excursion-products
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    await connectDB();
+    console.log("Начало создания товара экскурсии");
+    await connectToDatabase();
     const data = await request.json();
-
-    const product = await ExcursionProduct.create(data);
     
-    return new Response(
-      JSON.stringify(product),
-      { status: 201, headers: { "Content-Type": "application/json" } }
-    );
+    console.log("Получены данные для создания товара:", data);
+
+    // Проверяем обязательные поля
+    if (!data.title) {
+      console.error("Отсутствует название товара");
+      return NextResponse.json(
+        { error: "Название товара обязательно" },
+        { status: 400 }
+      );
+    }
+
+    if (!data.startTimes || data.startTimes.length === 0) {
+      console.error("Отсутствуют времена начала");
+      return NextResponse.json(
+        { error: "Время начала обязательно" },
+        { status: 400 }
+      );
+    }
+
+    if (!data.dateRanges || data.dateRanges.length === 0) {
+      console.error("Отсутствуют периоды продаж");
+      return NextResponse.json(
+        { error: "Периоды продаж обязательны" },
+        { status: 400 }
+      );
+    }
+
+    // Создаем товар с данными
+    const productData = {
+      excursionCard: data.excursionCard || null, // ID экскурсии может быть null
+      title: data.title,
+      services: data.services || [],
+      dateRanges: data.dateRanges,
+      startTimes: data.startTimes,
+      meetingPoints: data.meetingPoints || [],
+      tickets: data.tickets || [],
+      paymentOptions: data.paymentOptions || [],
+      additionalServices: data.additionalServices || [],
+      groups: data.groups || [],
+      isPublished: data.isPublished || false,
+    };
+
+    console.log("Создание товара с данными:", productData);
+
+    const product = await ExcursionProduct.create(productData);
+    console.log("Товар успешно создан:", product._id);
+
+    return NextResponse.json(product, { status: 201 });
   } catch (error: any) {
-    console.error("Error creating excursion product:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Failed to create excursion product" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+    console.error("Ошибка при создании товара экскурсии:", error);
+    return NextResponse.json(
+      { error: error.message || "Не удалось создать товар экскурсии" },
+      { status: 500 }
     );
   }
 } 

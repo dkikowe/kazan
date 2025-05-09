@@ -11,8 +11,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Calendar, Clock, MapPin } from "lucide-react";
+import {
+  Search,
+  CirclePlus,
+  CalendarDays,
+  MapPin,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ExcursionProduct {
   _id: string;
@@ -35,6 +52,7 @@ export default function ExcursionProductsPage() {
   const [products, setProducts] = useState<ExcursionProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -42,21 +60,107 @@ export default function ExcursionProductsPage() {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const response = await fetch("/api/excursion-products");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log("Загруженные товары:", data);
+      if (!Array.isArray(data)) {
+        console.error("Полученные данные не являются массивом:", data);
+        return;
+      }
       setProducts(data);
     } catch (error) {
+      console.error("Ошибка при загрузке товаров:", error);
       toast.error("Ошибка при загрузке товаров");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleEdit = (id: string) => {
+    console.log("Переход к редактированию товара:", id);
+    router.push(`/admin/excursion-products/${id}/edit`);
+  };
+
+  const handleEditWithErrorCatching = (id: string) => {
+    try {
+      handleEdit(id);
+    } catch (error) {
+      console.error("Ошибка при переходе к редактированию:", error);
+      toast.error("Не удалось открыть форму редактирования");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      console.log(`Удаление товара с ID: ${id}`);
+      setLoading(true);
+
+      const response = await fetch(`/api/excursion-products/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Ошибка при удалении товара:", errorData);
+        throw new Error(errorData.error || "Не удалось удалить товар");
+      }
+
+      console.log("Товар успешно удален");
+      setProducts(products.filter((product) => product._id !== id));
+      toast.success("Товар успешно удален");
+    } catch (error) {
+      console.error("Ошибка при удалении товара:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Ошибка при удалении товара"
+      );
+    } finally {
+      setDeleteProductId(null);
+      setLoading(false);
+    }
+  };
+
+  const confirmDelete = (id: string) => {
+    console.log(`Запрос подтверждения удаления товара с ID: ${id}`);
+    setDeleteProductId(id);
+  };
+
   const filteredProducts = products.filter((product) =>
-    product.excursionCard.title
-      .toLowerCase()
+    product.excursionCard?.title
+      ?.toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
+
+  // Функция для отображения форматированной даты
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Нет даты";
+    try {
+      return new Date(dateString).toLocaleDateString("ru-RU", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    } catch (e) {
+      return "Некорректная дата";
+    }
+  };
+
+  // Функция для отображения типа билета
+  const getTicketTypeName = (type: string) => {
+    switch (type) {
+      case "adult":
+        return "Взрослый";
+      case "child":
+        return "Детский";
+      case "additional":
+        return "Дополнительный";
+      default:
+        return type;
+    }
+  };
 
   if (loading) {
     return (
@@ -80,7 +184,7 @@ export default function ExcursionProductsPage() {
             onClick={() => router.push("/admin/excursion-products/new")}
             className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" />
+            <CirclePlus className="h-4 w-4" />
             Создать товар
           </Button>
         </div>
@@ -97,50 +201,69 @@ export default function ExcursionProductsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <Card
-              key={product._id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() =>
-                router.push(`/admin/excursion-products/${product._id}`)
-              }
-            >
+            <Card key={product._id} className="relative">
               <CardHeader>
-                <CardTitle className="line-clamp-1">
-                  {product.excursionCard.title}
-                </CardTitle>
-                <CardDescription className="line-clamp-2">
-                  {product.excursionCard.description}
-                </CardDescription>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="line-clamp-1">
+                      {product.excursionCard?.title || "Без названия"}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {product.excursionCard?.description || "Без описания"}
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditWithErrorCatching(product._id)}
+                      className="h-8 px-3 flex items-center"
+                      title="Редактировать"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      <span>Ред.</span>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => confirmDelete(product._id)}
+                      className="h-8 px-3 flex items-center"
+                      title="Удалить"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span>Удал.</span>
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
+                    <CalendarDays className="h-4 w-4" />
                     <span>
-                      {new Date(
-                        product.dateRanges[0]?.start
-                      ).toLocaleDateString()}{" "}
+                      {product.dateRanges?.[0]?.start
+                        ? formatDate(product.dateRanges[0].start)
+                        : "Нет даты"}{" "}
                       -{" "}
-                      {new Date(
-                        product.dateRanges[0]?.end
-                      ).toLocaleDateString()}
+                      {product.dateRanges?.[0]?.end
+                        ? formatDate(product.dateRanges[0].end)
+                        : "Нет даты"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    <span>{product.dateRanges.length} периодов</span>
+                    <span>{product.dateRanges?.length || 0} периодов</span>
                   </div>
                   <div className="pt-2 border-t">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Цены:</span>
                       <div className="flex gap-2">
-                        {product.tickets.map((ticket, index) => (
+                        {product.tickets?.map((ticket, index) => (
                           <span
                             key={index}
                             className="text-sm bg-muted px-2 py-1 rounded"
                           >
-                            {ticket.type === "adult" ? "Взрослый" : "Детский"}:{" "}
-                            {ticket.price} ₽
+                            {getTicketTypeName(ticket.type)}: {ticket.price} ₽
                           </span>
                         ))}
                       </div>
@@ -152,15 +275,43 @@ export default function ExcursionProductsPage() {
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {filteredProducts.length === 0 && !loading && (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium">Товары не найдены</h3>
             <p className="text-muted-foreground mt-2">
-              Попробуйте изменить параметры поиска
+              {searchQuery
+                ? "Попробуйте изменить параметры поиска"
+                : "Создайте новый товар экскурсии"}
             </p>
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={!!deleteProductId}
+        onOpenChange={(open) => {
+          if (!open) setDeleteProductId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить товар экскурсии?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие нельзя отменить. Товар будет полностью удален из
+              системы.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteProductId && handleDelete(deleteProductId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Да, удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

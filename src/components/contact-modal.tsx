@@ -11,14 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -27,10 +19,9 @@ interface ContactModalProps {
 
 export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     phone: "",
-    ticketType: "adult",
-    paymentType: "full",
+    comment: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -40,7 +31,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/bookings", {
+      const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,23 +41,14 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
       if (response.ok) {
         setIsSuccess(true);
-        setFormData({
-          fullName: "",
-          phone: "",
-          ticketType: "adult",
-          paymentType: "full",
-        });
-        toast.success("Заявка успешно отправлена");
+        setFormData({ name: "", phone: "", comment: "" });
         setTimeout(() => {
           setIsSuccess(false);
           onClose();
         }, 3000);
-      } else {
-        throw new Error("Failed to submit booking");
       }
     } catch (error) {
       console.error("Error sending form:", error);
-      toast.error("Ошибка при отправке заявки");
     } finally {
       setIsLoading(false);
     }
@@ -87,18 +69,17 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="fullName" className="text-[14px] text-[#6E7279]">
-                ФИО
+              <label htmlFor="name" className="text-[14px] text-[#6E7279]">
+                Имя
               </label>
               <Input
-                id="fullName"
-                value={formData.fullName}
+                id="name"
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
+                  setFormData({ ...formData, name: e.target.value })
                 }
                 required
                 className="h-[48px]"
-                placeholder="Ваше полное имя"
               />
             </div>
             <div className="space-y-2">
@@ -114,64 +95,30 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 }
                 required
                 className="h-[48px]"
-                placeholder="+7 (___) ___-__-__"
               />
             </div>
             <div className="space-y-2">
-              <label
-                htmlFor="ticketType"
-                className="text-[14px] text-[#6E7279]"
-              >
-                Тип билета
+              <label htmlFor="comment" className="text-[14px] text-[#6E7279]">
+                Комментарий
               </label>
-              <Select
-                value={formData.ticketType}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, ticketType: value })
+              <Textarea
+                id="comment"
+                value={formData.comment}
+                onChange={(e) =>
+                  setFormData({ ...formData, comment: e.target.value })
                 }
-              >
-                <SelectTrigger className="h-[48px]">
-                  <SelectValue placeholder="Выберите тип билета" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="adult">Взрослый</SelectItem>
-                  <SelectItem value="child">Детский</SelectItem>
-                  <SelectItem value="pensioner">Пенсионный</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="paymentType"
-                className="text-[14px] text-[#6E7279]"
-              >
-                Тип оплаты
-              </label>
-              <Select
-                value={formData.paymentType}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, paymentType: value })
-                }
-              >
-                <SelectTrigger className="h-[48px]">
-                  <SelectValue placeholder="Выберите тип оплаты" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full">Полная</SelectItem>
-                  <SelectItem value="prepayment">Предоплата</SelectItem>
-                  <SelectItem value="onsite">На месте</SelectItem>
-                </SelectContent>
-              </Select>
+                className="min-h-[100px]"
+              />
             </div>
             <Button
               type="submit"
-              className="w-full h-[48px] bg-[#3171F7] hover:bg-[#3171F7]/90 text-white font-medium"
+              className="w-full h-[48px] bg-[#3171F7] hover:bg-[#3171F7]/90"
               disabled={isLoading}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "Отправить заявку"
+                "Отправить"
               )}
             </Button>
           </form>

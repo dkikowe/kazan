@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
-import Category from '@/models/Category';
+import FilterItem from '@/models/FilterItem';
 import Tag from '@/models/Tag';
 import ExcursionCard from '@/models/ExcursionCard';
 import CommercialExcursion from '@/models/CommercialExcursion';
 
 // Регистрируем все модели
 const models = {
-  Category,
+  FilterItem,
   Tag,
   ExcursionCard,
   CommercialExcursion,

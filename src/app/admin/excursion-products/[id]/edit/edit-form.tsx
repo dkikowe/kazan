@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,33 +30,50 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-const productSchema = z.object({
-  tickets: z.array(
+const productFormSchema = z.object({
+  excursionCard: z.string(),
+  services: z.array(
     z.object({
-      type: z.enum(["adult", "child", "additional"]),
-      name: z.string().min(1, "Название билета обязательно"),
-      price: z.number().min(0, "Цена должна быть положительной"),
-      isDefaultPrice: z.boolean().optional(),
+      type: z.enum([
+        "transport",
+        "guide",
+        "ticket",
+        "lunch",
+        "audioguide",
+        "additional",
+      ]),
+      subtype: z.string(),
+      hours: z.number().min(0),
+      peopleCount: z.number().min(1),
+      price: z.number().min(0),
     })
   ),
   dateRanges: z.array(
     z.object({
       start: z.date(),
       end: z.date(),
-      excludedDates: z.array(z.date()).optional(),
+      excludedDates: z.array(z.date()),
     })
   ),
   startTimes: z.array(z.string().min(1, "Время начала обязательно")),
   meetingPoints: z.array(
     z.object({
-      name: z.string().min(1, "Название места встречи обязательно"),
-      address: z.string().min(1, "Адрес места встречи обязателен"),
+      name: z.string(),
+      address: z.string(),
       coordinates: z
         .object({
           lat: z.number(),
           lng: z.number(),
         })
         .optional(),
+    })
+  ),
+  tickets: z.array(
+    z.object({
+      type: z.enum(["adult", "child", "additional"]),
+      name: z.string(),
+      price: z.number().min(0),
+      isDefaultPrice: z.boolean().optional(),
     })
   ),
   paymentOptions: z.array(
@@ -76,56 +93,16 @@ const productSchema = z.object({
   groups: z.array(
     z.object({
       date: z.date(),
-      time: z.string().min(1, "Время группы обязательно"),
-      meetingPoint: z.string().min(1, "Место встречи группы обязательно"),
-      maxSize: z.number().min(1, "Максимальный размер группы обязателен"),
+      time: z.string(),
+      meetingPoint: z.string(),
+      maxSize: z.number().min(1),
       autoStop: z.boolean(),
     })
   ),
   isPublished: z.boolean(),
 });
 
-export type ProductFormData = z.infer<typeof productSchema>;
-
-interface ExcursionProduct {
-  _id: string;
-  excursionCard: {
-    _id: string;
-    title: string;
-  };
-  tickets: Array<{
-    type: "adult" | "child" | "additional";
-    name: string;
-    price: number;
-    isDefaultPrice?: boolean;
-  }>;
-  dateRanges: Array<{
-    start: string;
-    end: string;
-    excludedDates?: string[];
-  }>;
-  startTimes: string[];
-  meetingPoints: Array<{
-    name: string;
-    address: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
-  }>;
-  paymentOptions: Array<{
-    type: "full" | "prepayment" | "onsite";
-    prepaymentPercent?: number;
-  }>;
-  groups: Array<{
-    date: string;
-    time: string;
-    meetingPoint: string;
-    maxSize: number;
-    autoStop: boolean;
-  }>;
-  isPublished: boolean;
-}
+export type ProductFormData = z.infer<typeof productFormSchema>;
 
 interface EditFormProps {
   id: string;
@@ -142,31 +119,57 @@ export default function EditForm({
   const [saving, setSaving] = useState(false);
 
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productFormSchema),
     defaultValues: initialData,
   });
 
-  const onSubmit = async (data: ProductFormData) => {
+  const onSubmit = async (values: ProductFormData) => {
     try {
+      console.log(`Сохранение товара с ID: ${id}`, values);
       setSaving(true);
-      const response = await fetch(`/api/excursion-products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
 
-      if (!response.ok) throw new Error("Failed to update product");
+      // Преобразуем строковые значения в числовые для полей групп
+      const formattedValues = {
+        ...values,
+        groups: values.groups.map((group) => ({
+          ...group,
+          maxSize: Number(group.maxSize),
+        })),
+      };
 
-      toast.success("Товар успешно обновлен");
-      if (excursionId) {
-        router.push(`/admin/excursions/${excursionId}/products`);
-      } else {
-        router.push(`/admin/excursion-products/${id}`);
+      const response = await fetch(
+        `/api/excursion-products/${id}?_=${Date.now()}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formattedValues),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Ошибка API при обновлении товара:", error);
+        throw new Error(
+          error.error || error.message || "Не удалось обновить товар"
+        );
       }
-    } catch (error) {
-      toast.error("Ошибка при обновлении товара");
+
+      const updatedProduct = await response.json();
+      console.log("Товар успешно обновлен:", updatedProduct);
+      toast.success("Товар успешно обновлен");
+
+      setTimeout(() => {
+        if (excursionId) {
+          router.push(`/admin/excursions/${excursionId}/products`);
+        } else {
+          router.push(`/admin/excursions`);
+        }
+      }, 1000);
+    } catch (error: any) {
+      console.error("Ошибка при сохранении товара:", error);
+      toast.error(error.message || "Ошибка при обновлении товара");
     } finally {
       setSaving(false);
     }
@@ -183,7 +186,102 @@ export default function EditForm({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Билеты */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Основная информация</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="isPublished"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Опубликовать товар</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Периоды продаж</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {form.watch("dateRanges").map((_, index) => (
+                <div key={index} className="flex gap-4 mb-4">
+                  <FormField
+                    control={form.control}
+                    name={`dateRanges.${index}.start`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Начало периода</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            date={field.value}
+                            onSelect={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`dateRanges.${index}.end`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Конец периода</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            date={field.value}
+                            onSelect={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="mt-8"
+                    onClick={() => {
+                      const dateRanges = form.getValues("dateRanges");
+                      dateRanges.splice(index, 1);
+                      form.setValue("dateRanges", dateRanges);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const dateRanges = form.getValues("dateRanges");
+                  dateRanges.push({
+                    start: new Date(),
+                    end: new Date(),
+                    excludedDates: [],
+                  });
+                  form.setValue("dateRanges", dateRanges);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить период
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Билеты</CardTitle>
@@ -311,7 +409,6 @@ export default function EditForm({
             </CardContent>
           </Card>
 
-          {/* Время начала */}
           <Card>
             <CardHeader>
               <CardTitle>Время начала</CardTitle>
@@ -366,7 +463,6 @@ export default function EditForm({
             </CardContent>
           </Card>
 
-          {/* Варианты оплаты */}
           <Card>
             <CardHeader>
               <CardTitle>Варианты оплаты</CardTitle>
@@ -478,7 +574,6 @@ export default function EditForm({
             </CardContent>
           </Card>
 
-          {/* Дополнительные услуги */}
           <Card>
             <CardHeader>
               <CardTitle>Дополнительные услуги</CardTitle>
@@ -567,6 +662,139 @@ export default function EditForm({
                 }}
               >
                 Добавить услугу
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Группы</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {form.watch("groups").map((field, index) => (
+                <div
+                  key={`group-${index}`}
+                  className="space-y-4 border p-4 rounded-lg"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`groups.${index}.date`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Дата</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={
+                                field.value instanceof Date
+                                  ? field.value.toISOString().split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                field.onChange(new Date(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`groups.${index}.time`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Время</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name={`groups.${index}.meetingPoint`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Место встречи</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`groups.${index}.maxSize`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Максимальный размер группы</FormLabel>
+                          <FormControl>
+                            <Input type="number" min={1} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`groups.${index}.autoStop`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Автостоп</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => {
+                      const currentGroups = form.getValues("groups");
+                      form.setValue(
+                        "groups",
+                        currentGroups.filter((_, i) => i !== index)
+                      );
+                    }}
+                  >
+                    Удалить группу
+                  </Button>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const currentGroups = form.getValues("groups");
+                  form.setValue("groups", [
+                    ...currentGroups,
+                    {
+                      date: new Date(),
+                      time: "",
+                      meetingPoint: "",
+                      maxSize: 0,
+                      autoStop: false,
+                    },
+                  ]);
+                }}
+              >
+                Добавить группу
               </Button>
             </CardContent>
           </Card>

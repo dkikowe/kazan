@@ -18,7 +18,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { excursionFormSchema, type ExcursionFormData } from "@/types/excursion";
+import { ITag } from "@/models/Tag";
+import { IFilterItem } from "@/models/FilterItem";
+import { Types } from "mongoose";
 
 interface ExcursionFormProps {
   excursion: ExcursionFormData;
@@ -27,6 +37,10 @@ interface ExcursionFormProps {
 export function ExcursionForm({ excursion }: ExcursionFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [tags, setTags] = useState<(ITag & { _id: Types.ObjectId })[]>([]);
+  const [filterItems, setFilterItems] = useState<
+    (IFilterItem & { _id: Types.ObjectId })[]
+  >([]);
 
   const form = useForm<ExcursionFormData>({
     resolver: zodResolver(excursionFormSchema),
@@ -43,7 +57,7 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
         reviews: [],
         attractions: [],
         tags: [],
-        categories: [],
+        filterItems: [],
         isPublished: false,
         commercialSlug: "",
       },
@@ -71,7 +85,7 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
           reviews: [],
           attractions: [],
           tags: [],
-          categories: [],
+          filterItems: [],
           isPublished: false,
           commercialSlug: "",
         },
@@ -84,6 +98,34 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
       });
     }
   }, [excursion, form]);
+
+  useEffect(() => {
+    const fetchTagsAndFilterItems = async () => {
+      try {
+        const [tagsResponse, filterItemsResponse] = await Promise.all([
+          fetch("/api/tags"),
+          fetch("/api/filter-items"),
+        ]);
+
+        if (!tagsResponse.ok || !filterItemsResponse.ok) {
+          throw new Error("Ошибка при загрузке данных");
+        }
+
+        const [tagsData, filterItemsData] = await Promise.all([
+          tagsResponse.json(),
+          filterItemsResponse.json(),
+        ]);
+
+        setTags(tagsData);
+        setFilterItems(filterItemsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Ошибка при загрузке тегов и элементов фильтров");
+      }
+    };
+
+    fetchTagsAndFilterItems();
+  }, []);
 
   const onSubmit = async (values: ExcursionFormData) => {
     try {
@@ -187,6 +229,126 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="card.tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Теги</FormLabel>
+                  <Select
+                    onValueChange={(value: string) => {
+                      const currentTags = field.value || [];
+                      if (!currentTags.includes(value)) {
+                        field.onChange([...currentTags, value]);
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите теги" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {tags.map((tag) => (
+                        <SelectItem
+                          key={tag._id.toString()}
+                          value={tag._id.toString()}
+                        >
+                          {tag.name || ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {field.value?.map((tagId) => {
+                      const tag = tags.find((t) => t._id.toString() === tagId);
+                      return tag ? (
+                        <div
+                          key={tag._id.toString()}
+                          className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
+                        >
+                          <span>{tag.name || ""}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange(
+                                field.value?.filter((id) => id !== tagId)
+                              );
+                            }}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="card.filterItems"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Элементы фильтров</FormLabel>
+                  <Select
+                    onValueChange={(value: string) => {
+                      const currentFilterItems = field.value || [];
+                      if (!currentFilterItems.includes(value)) {
+                        field.onChange([...currentFilterItems, value]);
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите элементы фильтров" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {filterItems.map((filterItem) => (
+                        <SelectItem
+                          key={filterItem._id.toString()}
+                          value={filterItem._id.toString()}
+                        >
+                          {filterItem.name || ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {field.value?.map((filterItemId) => {
+                      const filterItem = filterItems.find(
+                        (f) => f._id.toString() === filterItemId
+                      );
+                      return filterItem ? (
+                        <div
+                          key={filterItem._id.toString()}
+                          className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
+                        >
+                          <span>{filterItem.name || ""}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange(
+                                field.value?.filter((id) => id !== filterItemId)
+                              );
+                            }}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

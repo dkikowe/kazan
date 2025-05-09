@@ -47,7 +47,9 @@ const transportSubtypes = [
 ] as const;
 
 const productFormSchema = z.object({
-  excursionCard: z.string(),
+  excursionCard: z.string().optional(),
+  title: z.string().min(1, "Название товара обязательно"),
+  isPublished: z.boolean(),
   services: z.array(
     z.object({
       type: z.enum([
@@ -128,7 +130,7 @@ type FieldArrayNames =
   | "additionalServices"
   | "groups";
 
-export default function NewProductPage() {
+export default function NewProductPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -137,6 +139,9 @@ export default function NewProductPage() {
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
+      excursionCard: params.id,
+      title: "",
+      isPublished: false,
       services: [],
       dateRanges: [],
       startTimes: [""],
@@ -208,6 +213,19 @@ export default function NewProductPage() {
         const response = await fetch("/api/excursions");
         const data = await response.json();
         setExcursions(data);
+
+        // Добавляем период продаж по умолчанию
+        const today = new Date();
+        const nextMonth = new Date();
+        nextMonth.setMonth(today.getMonth() + 1);
+
+        form.setValue("dateRanges", [
+          {
+            start: today,
+            end: nextMonth,
+            excludedDates: [],
+          },
+        ]);
       } catch (error) {
         toast.error("Ошибка при загрузке экскурсий");
       } finally {
@@ -220,28 +238,51 @@ export default function NewProductPage() {
 
   const onSubmit = async (values: ProductFormData) => {
     try {
+      console.log("Создание нового товара экскурсии:", values);
       setSaving(true);
+
+      // Убеждаемся, что ID экскурсии добавлен в форму
+      const formData = {
+        ...values,
+        excursionCard: params.id,
+      };
+
       const response = await fetch("/api/excursion-products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to create product");
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Ошибка API при создании товара:", error);
+        throw new Error(
+          error.error || error.message || "Не удалось создать товар"
+        );
+      }
 
+      const createdProduct = await response.json();
+      console.log("Товар успешно создан:", createdProduct);
       toast.success("Товар успешно создан");
-      router.push("/admin/excursions");
-    } catch (error) {
-      toast.error("Ошибка при создании товара");
+
+      // Правильное перенаправление после создания товара
+      router.push(`/admin/excursions/${params.id}/products`);
+    } catch (error: any) {
+      console.error("Ошибка при создании товара:", error);
+      toast.error(error.message || "Ошибка при создании товара");
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div>Загрузка...</div>;
+    return (
+      <div className="container mx-auto py-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return (
@@ -254,7 +295,38 @@ export default function NewProductPage() {
             <CardHeader>
               <CardTitle>Основная информация</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Название товара</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Введите название товара" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isPublished"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Опубликовать</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="excursionCard"

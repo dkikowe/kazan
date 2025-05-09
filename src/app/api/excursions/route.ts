@@ -1,62 +1,102 @@
-import { NextResponse } from 'next/server';
-import mongoose from 'mongoose';
-import models from '@/lib/models';
-
-// Сначала импортируем базовые модели
-import Category from '@/models/Category';
-import Tag from '@/models/Tag';
-
-// Затем импортируем модели, которые зависят от базовых
-import ExcursionCard from '@/models/ExcursionCard';
-import CommercialExcursion from '@/models/CommercialExcursion';
-
-// Подключение к MongoDB
-const connectDB = async () => {
-  if (mongoose.connections[0].readyState) return;
-  await mongoose.connect('mongodb+srv://dkikowe:dkikowe@project.0g2vn.mongodb.net/vostokargo');
-};
+import { connectToDatabase } from "@/lib/mongodb";
+import { NextResponse } from "next/server";
+import ExcursionProduct from "@/models/ExcursionProduct";
+import mongoose from "mongoose";
+import { nanoid } from 'nanoid';
 
 // GET /api/excursions
 export async function GET() {
   try {
-    await connectDB();
-    const excursions = await models.ExcursionCard.find()
-      .populate('tags')
-      .populate('categories')
-      .sort({ createdAt: -1 });
-    return NextResponse.json(excursions);
+    await connectToDatabase();
+    console.log("Получение списка экскурсий из БД...");
+    
+    const db = mongoose.connection.db;
+    if (!db) {
+      console.error("Не удалось получить объект базы данных");
+      return NextResponse.json([]);
+    }
+    
+    const collection = db.collection('excursioncards');
+    const rawExcursions = await collection.find({}).toArray();
+    
+    return NextResponse.json(rawExcursions);
   } catch (error) {
-    console.error('Error fetching excursions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch excursions' },
-      { status: 500 }
-    );
+    console.error('Ошибка при получении экскурсий:', error);
+    return NextResponse.json([], { status: 500 });
   }
 }
 
 // POST /api/excursions
 export async function POST(request: Request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     const data = await request.json();
 
-    // Создаем карточку экскурсии
-    const excursionCard = await models.ExcursionCard.create(data.card);
+    if (!data.card || !data.card.title) {
+      return NextResponse.json(
+        { error: "Название экскурсии обязательно" },
+        { status: 400 }
+      );
+    }
 
-    // Если есть коммерческие данные, создаем их
+    const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error("Не удалось подключиться к базе данных");
+    }
+
+    // Генерируем уникальный commercialSlug
+    const commercialSlug = `${data.card.title.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-')}-${nanoid(6)}`;
+
+    // Подготавливаем данные для карточки экскурсии
+    const cardData = {
+      ...data.card,
+      commercialSlug,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Проверяем существование товара экскурсии
+    if (data.card.excursionProduct) {
+      const product = await ExcursionProduct.findById(data.card.excursionProduct).lean();
+      if (product) {
+        cardData.excursionProduct = {
+          _id: product._id.toString(),
+          title: product.title || 'Без названия',
+        };
+      }
+    }
+
+    // Создаем карточку экскурсии
+    const collection = db.collection('excursioncards');
+    const result = await collection.insertOne(cardData);
+    
+    if (!result.acknowledged) {
+      throw new Error("Не удалось создать экскурсию");
+    }
+
+    const createdCard = {
+      ...cardData,
+      _id: result.insertedId,
+    };
+
+    // Создаем коммерческие данные, если они есть
     if (data.commercial) {
-      await models.CommercialExcursion.create({
+      const commercialCollection = db.collection('commercialexcursions');
+      await commercialCollection.insertOne({
         ...data.commercial,
-        commercialSlug: excursionCard.commercialSlug,
+        commercialSlug,
+        excursionId: result.insertedId,
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
     }
 
-    return NextResponse.json(excursionCard, { status: 201 });
-  } catch (error: any) {
-    console.error('Error creating excursion:', error);
+    return NextResponse.json(createdCard);
+  } catch (error) {
+    console.error("Ошибка при создании экскурсии:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create excursion' },
-      { status: 400 }
+      { error: "Ошибка при создании экскурсии" },
+      { status: 500 }
     );
   }
 } 

@@ -39,30 +39,36 @@ const promoCodeSchema = z.object({
 
 export const excursionFormSchema = z.object({
   card: z.object({
-    _id: z.string().optional(),
-    title: z.string().min(1, 'Обязательное поле'),
-    seoTitle: z.string().min(1, 'Обязательное поле'),
-    description: z.string().min(1, 'Обязательное поле'),
+    title: z.string().min(1, "Название экскурсии обязательно"),
+    seoTitle: z.string().optional(),
+    description: z.string().optional(),
     images: z.array(z.string()).optional(),
     videoUrl: z.string().optional(),
-    whatYouWillSee: whatYouWillSeeSchema,
-    reviews: z.array(reviewSchema).optional(),
-    attractions: z.array(z.string()).optional(),
+    whatYouWillSee: z.object({
+      title: z.string().optional(),
+      items: z.array(z.string()).optional(),
+    }).optional(),
+    reviews: z.array(z.any()).optional(),
+    attractions: z.array(z.any()).optional(),
     tags: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
+    filterItems: z.array(z.string()).optional(),
     isPublished: z.boolean(),
-    commercialSlug: z.string().min(1, 'Обязательное поле'),
-  }).optional(),
+    commercialSlug: z.string().optional(),
+    excursionProduct: z.string().optional(),
+  }),
   commercial: z.object({
-    schedule: z.array(z.object({
-      date: z.string().min(1, 'Обязательное поле'),
-      time: z.string().min(1, 'Обязательное поле'),
-    })).optional(),
-    meetingPoint: meetingPointSchema,
-    duration: durationSchema,
-    prices: z.array(priceSchema).optional(),
-    additionalServices: z.array(additionalServiceSchema).optional(),
-    promoCodes: z.array(promoCodeSchema).optional(),
+    schedule: z.array(z.any()).optional(),
+    meetingPoint: z.object({
+      name: z.string().optional(),
+      address: z.string().optional(),
+    }).optional(),
+    duration: z.object({
+      hours: z.number().optional(),
+      minutes: z.number().optional(),
+    }).optional(),
+    prices: z.array(z.any()).optional(),
+    additionalServices: z.array(z.any()).optional(),
+    promoCodes: z.array(z.any()).optional(),
   }).optional(),
 });
 
