@@ -13,15 +13,12 @@ import FilterGroup from "@/models/FilterGroup";
 import excursionModel from "../../../models/Excursion";
 
 // GET /api/excursions/[id]
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     console.log("Получение данных экскурсии...");
     
-    const id = params.id;
+    const id = request.nextUrl.pathname.split('/').pop();
     console.log(`Запрашиваемый ID: ${id}`);
     
     const db = mongoose.connection.db;
@@ -75,15 +72,12 @@ export async function GET(
 }
 
 // PUT /api/excursions/[id]
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest) {
   try {
     await connectToDatabase();
     console.log("Обновление данных экскурсии...");
     
-    const id = params.id;
+    const id = request.nextUrl.pathname.split('/').pop();
     console.log(`Обновляемый ID: ${id}`);
     
     const data = await request.json();
@@ -183,15 +177,12 @@ export async function PUT(
 }
 
 // DELETE /api/excursions/[id]
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     await connectToDatabase();
     console.log("Удаление экскурсии...");
     
-    const id = params.id;
+    const id = request.nextUrl.pathname.split('/').pop();
     console.log(`Удаляемый ID: ${id}`);
     
     const db = mongoose.connection.db;

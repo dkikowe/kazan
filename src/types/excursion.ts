@@ -39,6 +39,7 @@ const promoCodeSchema = z.object({
 
 export const excursionFormSchema = z.object({
   card: z.object({
+    _id: z.string().optional(),
     title: z.string().min(1, "Название экскурсии обязательно"),
     seoTitle: z.string().optional(),
     description: z.string().optional(),

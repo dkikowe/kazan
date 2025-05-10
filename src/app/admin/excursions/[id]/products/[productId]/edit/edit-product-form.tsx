@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,23 +17,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { z } from "zod";
-import { SubmitHandler } from "react-hook-form";
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export default async function NewProductPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Создание нового товара</h1>
-      </div>
-      <NewProductForm excursionId={resolvedParams.id} />
-    </div>
-  );
+interface EditProductFormProps {
+  excursionId: string;
+  productId: string;
 }
 
 const productFormSchema = z.object({
@@ -127,14 +114,14 @@ const productFormSchema = z.object({
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
-interface NewProductFormProps {
-  excursionId: string;
-}
-
-function NewProductForm({ excursionId }: NewProductFormProps) {
+export default function EditProductForm({
+  excursionId,
+  productId,
+}: EditProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema) as any,
@@ -154,38 +141,76 @@ function NewProductForm({ excursionId }: NewProductFormProps) {
   });
 
   useEffect(() => {
-    setLoading(false);
-  }, []);
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(
+          `/api/excursion-products/${productId}?_=${Date.now()}`
+        );
 
-  const onSubmit: SubmitHandler<ProductFormData> = async (data) => {
+        if (!response.ok) {
+          throw new Error("Не удалось загрузить товар");
+        }
+
+        const data = await response.json();
+
+        // Преобразуем даты в объекты Date
+        if (data.dateRanges) {
+          data.dateRanges = data.dateRanges.map((range: any) => ({
+            ...range,
+            start: new Date(range.start),
+            end: new Date(range.end),
+            excludedDates: (range.excludedDates || []).map(
+              (date: string) => new Date(date)
+            ),
+          }));
+        }
+
+        if (data.groups) {
+          data.groups = data.groups.map((group: any) => ({
+            ...group,
+            date: new Date(group.date),
+          }));
+        }
+
+        form.reset(data);
+      } catch (error) {
+        console.error("Ошибка при загрузке товара:", error);
+        setError("Не удалось загрузить товар");
+        toast.error("Ошибка при загрузке товара");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId, form]);
+
+  const onSubmit = async (values: ProductFormData) => {
     try {
-      console.log("Создание нового товара экскурсии:", data);
       setSaving(true);
 
-      const formData = {
-        ...data,
-        excursionCard: excursionId,
-      };
-
-      const response = await fetch("/api/excursion-products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `/api/excursion-products/${productId}?_=${Date.now()}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Ошибка при создании товара");
+        throw new Error("Ошибка при сохранении товара");
       }
 
-      toast.success("Товар успешно создан");
+      toast.success("Товар успешно обновлен");
       setTimeout(() => {
         router.push(`/admin/excursions/${excursionId}/products`);
       }, 1000);
     } catch (error: any) {
-      console.error("Ошибка при создании товара:", error);
-      toast.error(error.message || "Ошибка при создании товара");
+      console.error("Ошибка при сохранении товара:", error);
+      toast.error(error.message || "Ошибка при сохранении товара");
     } finally {
       setSaving(false);
     }
@@ -196,6 +221,24 @@ function NewProductForm({ excursionId }: NewProductFormProps) {
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-red-500">{error}</p>
+          <Button
+            onClick={() =>
+              router.push(`/admin/excursions/${excursionId}/products`)
+            }
+            className="mt-4"
+          >
+            Вернуться к списку товаров
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -211,7 +254,7 @@ function NewProductForm({ excursionId }: NewProductFormProps) {
                 <FormItem>
                   <FormLabel>Название товара</FormLabel>
                   <FormControl>
-                    <Input placeholder="Введите название товара" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

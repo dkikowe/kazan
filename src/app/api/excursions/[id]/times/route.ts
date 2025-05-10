@@ -1,5 +1,5 @@
 import { connectToDatabase } from "@/lib/mongodb";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import ExcursionCard from "@/models/ExcursionCard";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import mongoose from "mongoose";
@@ -16,13 +16,10 @@ interface ExcursionCardInfo {
 }
 
 // GET /api/excursions/[id]/times
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
-    const id = params.id;
+    const id = request.nextUrl.pathname.split('/')[3]; // Получаем ID из URL
 
     // Получаем данные о карточке экскурсии
     const excursionDoc = await ExcursionCard.findById(id).lean();

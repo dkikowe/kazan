@@ -142,10 +142,13 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
         body: JSON.stringify({
           card: {
             ...values.card,
-            whatYouWillSee: {
-              ...values.card.whatYouWillSee,
-              items: values.card.whatYouWillSee.items.filter(Boolean),
-            },
+            whatYouWillSee: values.card.whatYouWillSee
+              ? {
+                  ...values.card.whatYouWillSee,
+                  items:
+                    values.card.whatYouWillSee.items?.filter(Boolean) || [],
+                }
+              : undefined,
           },
           commercial: values.commercial,
         }),

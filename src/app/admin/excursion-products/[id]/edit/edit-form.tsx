@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
@@ -31,83 +31,99 @@ import {
 } from "@/components/ui/form";
 
 const productFormSchema = z.object({
-  excursionCard: z.string(),
+  excursionCard: z.string().optional(),
   title: z.string().min(1, "Название товара обязательно"),
-  services: z.array(
-    z.object({
-      type: z.enum([
-        "transport",
-        "guide",
-        "ticket",
-        "lunch",
-        "audioguide",
-        "additional",
-      ]),
-      subtype: z.string(),
-      hours: z.number().min(0),
-      peopleCount: z.number().min(1),
-      price: z.number().min(0),
-    })
-  ),
-  dateRanges: z.array(
-    z.object({
-      start: z.date(),
-      end: z.date(),
-      excludedDates: z.array(z.date()),
-    })
-  ),
-  startTimes: z.array(z.string().min(1, "Время начала обязательно")),
-  meetingPoints: z.array(
-    z.object({
-      name: z.string(),
-      address: z.string(),
-      coordinates: z
-        .object({
-          lat: z.number(),
-          lng: z.number(),
-        })
-        .optional(),
-    })
-  ),
-  tickets: z.array(
-    z.object({
-      type: z.enum(["adult", "child", "additional"]),
-      name: z.string(),
-      price: z.number().min(0),
-      isDefaultPrice: z.boolean().optional(),
-    })
-  ),
-  paymentOptions: z.array(
-    z.object({
-      type: z.enum(["full", "prepayment", "onsite"]),
-      prepaymentPercent: z.number().min(0).max(100).optional(),
-      description: z.string().optional(),
-    })
-  ),
-  additionalServices: z.array(
-    z.object({
-      name: z.string().min(1, "Название услуги обязательно"),
-      price: z.number().min(0, "Цена должна быть положительной"),
-      description: z.string().optional(),
-    })
-  ),
-  groups: z.array(
-    z.object({
-      date: z.date(),
-      time: z.string(),
-      meetingPoint: z.string(),
-      maxSize: z.number().min(1),
-      autoStop: z.boolean(),
-    })
-  ),
-  isPublished: z.boolean(),
+  services: z
+    .array(
+      z.object({
+        type: z.enum([
+          "transport",
+          "guide",
+          "ticket",
+          "lunch",
+          "audioguide",
+          "additional",
+        ]),
+        subtype: z.string(),
+        hours: z.number().min(0),
+        peopleCount: z.number().min(1),
+        price: z.number().min(0),
+      })
+    )
+    .default([]),
+  dateRanges: z
+    .array(
+      z.object({
+        start: z.coerce.date(),
+        end: z.coerce.date(),
+        excludedDates: z.array(z.coerce.date()).default([]),
+      })
+    )
+    .default([]),
+  startTimes: z
+    .array(z.string().min(1, "Время начала обязательно"))
+    .default([""]),
+  meetingPoints: z
+    .array(
+      z.object({
+        name: z.string(),
+        address: z.string(),
+        coordinates: z
+          .object({
+            lat: z.number(),
+            lng: z.number(),
+          })
+          .optional(),
+      })
+    )
+    .default([]),
+  tickets: z
+    .array(
+      z.object({
+        type: z.enum(["adult", "child", "additional"]),
+        name: z.string(),
+        price: z.number().min(0),
+        isDefaultPrice: z.boolean().default(false),
+      })
+    )
+    .default([]),
+  paymentOptions: z
+    .array(
+      z.object({
+        type: z.enum(["full", "prepayment", "onsite"]),
+        prepaymentPercent: z.number().min(0).max(100).optional(),
+        description: z.string().optional(),
+      })
+    )
+    .default([]),
+  additionalServices: z
+    .array(
+      z.object({
+        name: z.string().min(1, "Название услуги обязательно"),
+        price: z.number().min(0, "Цена должна быть положительной"),
+        description: z.string().optional(),
+      })
+    )
+    .default([]),
+  groups: z
+    .array(
+      z.object({
+        date: z.coerce.date(),
+        time: z.string(),
+        meetingPoint: z.string(),
+        maxSize: z.number().min(1),
+        autoStop: z.boolean().default(false),
+      })
+    )
+    .default([]),
+  isPublished: z.boolean().default(false),
 });
 
 export type ProductFormData = z.infer<typeof productFormSchema>;
 
 interface EditFormProps {
   id: string;
-  initialData: ProductFormData;
+  initialData?: ProductFormData;
   excursionId?: string;
 }
 
@@ -117,26 +133,104 @@ export default function EditForm({
   excursionId,
 }: EditFormProps) {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(productFormSchema),
-    defaultValues: initialData,
+    resolver: zodResolver(productFormSchema) as any,
+    defaultValues: {
+      title: "",
+      services: [],
+      dateRanges: [],
+      startTimes: [""],
+      meetingPoints: [],
+      tickets: [],
+      paymentOptions: [],
+      additionalServices: [],
+      groups: [],
+      isPublished: false,
+    },
   });
+
+  const {
+    fields: dateRangeFields,
+    append: appendDateRange,
+    remove: removeDateRange,
+  } = useFieldArray({
+    control: form.control,
+    name: "dateRanges",
+  });
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(
+          `/api/excursion-products/${id}?_=${Date.now()}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Не удалось загрузить товар");
+        }
+
+        const data = await response.json();
+
+        // Преобразуем даты в объекты Date
+        if (data.dateRanges) {
+          data.dateRanges = data.dateRanges.map((range: any) => ({
+            ...range,
+            start: new Date(range.start),
+            end: new Date(range.end),
+            excludedDates: (range.excludedDates || []).map(
+              (date: string) => new Date(date)
+            ),
+          }));
+        }
+
+        if (data.groups) {
+          data.groups = data.groups.map((group: any) => ({
+            ...group,
+            date: new Date(group.date),
+          }));
+        }
+
+        form.reset(data);
+      } catch (error) {
+        console.error("Ошибка при загрузке товара:", error);
+        setError("Не удалось загрузить товар");
+        toast.error("Ошибка при загрузке товара");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, form]);
 
   const onSubmit = async (values: ProductFormData) => {
     try {
-      console.log(`Сохранение товара с ID: ${id}`, values);
+      console.log("Начало сохранения товара:", JSON.stringify(values, null, 2));
       setSaving(true);
 
-      // Преобразуем строковые значения в числовые для полей групп
-      const formattedValues = {
+      // Подготавливаем данные для отправки
+      const formData = {
         ...values,
+        dateRanges: values.dateRanges.map((range) => ({
+          ...range,
+          start: range.start.toISOString(),
+          end: range.end.toISOString(),
+          excludedDates: range.excludedDates.map((date) => date.toISOString()),
+        })),
         groups: values.groups.map((group) => ({
           ...group,
-          maxSize: Number(group.maxSize),
+          date: group.date.toISOString(),
         })),
       };
+
+      console.log(
+        "Подготовленные данные для отправки:",
+        JSON.stringify(formData, null, 2)
+      );
 
       const response = await fetch(
         `/api/excursion-products/${id}?_=${Date.now()}`,
@@ -145,27 +239,25 @@ export default function EditForm({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formattedValues),
+          body: JSON.stringify(formData),
         }
       );
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        console.error("Ошибка API при обновлении товара:", error);
-        throw new Error(
-          error.error || error.message || "Не удалось обновить товар"
-        );
+        console.error("Ошибка API:", responseData);
+        throw new Error(responseData.message || "Не удалось обновить товар");
       }
 
-      const updatedProduct = await response.json();
-      console.log("Товар успешно обновлен:", updatedProduct);
+      console.log("Товар успешно обновлен:", responseData);
       toast.success("Товар успешно обновлен");
 
       setTimeout(() => {
         if (excursionId) {
           router.push(`/admin/excursions/${excursionId}/products`);
         } else {
-          router.push(`/admin/excursions`);
+          router.push(`/admin/excursion-products`);
         }
       }, 1000);
     } catch (error: any) {
@@ -175,6 +267,30 @@ export default function EditForm({
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-red-500">{error}</p>
+          <Button
+            onClick={() => router.push("/admin/excursion-products")}
+            className="mt-4"
+          >
+            Вернуться к списку товаров
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="container">
@@ -221,18 +337,25 @@ export default function EditForm({
               <CardTitle>Периоды продаж</CardTitle>
             </CardHeader>
             <CardContent>
-              {form.watch("dateRanges").map((_, index) => (
-                <div key={index} className="flex gap-4 mb-4">
+              {dateRangeFields.map((field, index) => (
+                <div key={field.id} className="flex gap-4 mb-4">
                   <FormField
                     control={form.control}
                     name={`dateRanges.${index}.start`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Начало периода</FormLabel>
+                        <FormLabel>Дата начала</FormLabel>
                         <FormControl>
-                          <DatePicker
-                            date={field.value}
-                            onSelect={field.onChange}
+                          <Input
+                            type="date"
+                            {...field}
+                            value={
+                              field.value
+                                ? new Date(field.value)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : ""
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -244,11 +367,18 @@ export default function EditForm({
                     name={`dateRanges.${index}.end`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Конец периода</FormLabel>
+                        <FormLabel>Дата окончания</FormLabel>
                         <FormControl>
-                          <DatePicker
-                            date={field.value}
-                            onSelect={field.onChange}
+                          <Input
+                            type="date"
+                            {...field}
+                            value={
+                              field.value
+                                ? new Date(field.value)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : ""
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -257,33 +387,25 @@ export default function EditForm({
                   />
                   <Button
                     type="button"
-                    variant="outline"
-                    size="icon"
+                    variant="destructive"
+                    onClick={() => removeDateRange(index)}
                     className="mt-8"
-                    onClick={() => {
-                      const dateRanges = form.getValues("dateRanges");
-                      dateRanges.splice(index, 1);
-                      form.setValue("dateRanges", dateRanges);
-                    }}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    Удалить
                   </Button>
                 </div>
               ))}
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  const dateRanges = form.getValues("dateRanges");
-                  dateRanges.push({
+                onClick={() =>
+                  appendDateRange({
                     start: new Date(),
                     end: new Date(),
                     excludedDates: [],
-                  });
-                  form.setValue("dateRanges", dateRanges);
-                }}
+                  })
+                }
               >
-                <Plus className="h-4 w-4 mr-2" />
                 Добавить период
               </Button>
             </CardContent>
