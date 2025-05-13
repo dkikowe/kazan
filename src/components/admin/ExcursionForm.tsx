@@ -29,6 +29,7 @@ import { excursionFormSchema, type ExcursionFormData } from "@/types/excursion";
 import { ITag } from "@/models/Tag";
 import { IFilterItem } from "@/models/FilterItem";
 import { Types } from "mongoose";
+import { GalleryUpload } from "@/components/ui/gallery-upload";
 
 interface ExcursionFormProps {
   excursion: ExcursionFormData;
@@ -367,6 +368,23 @@ export function ExcursionForm({ excursion }: ExcursionFormProps) {
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="card.images"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Галерея изображений</FormLabel>
+                  <FormControl>
+                    <GalleryUpload
+                      value={field.value || []}
+                      onChange={(urls) => field.onChange(urls)}
                     />
                   </FormControl>
                   <FormMessage />

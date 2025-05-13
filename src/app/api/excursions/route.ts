@@ -4,20 +4,21 @@ import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
 import mongoose from "mongoose";
 import { nanoid } from 'nanoid';
+import dbConnect from "@/lib/dbConnect";
 
 // GET /api/excursions
 export async function GET() {
   try {
-    await connectToDatabase();
-    console.log("Получение списка экскурсий из БД...");
-    
-    // Используем модель ExcursionCard вместо прямого обращения к коллекции
-    const excursions = await ExcursionCard.find({}).lean();
-    
+    await dbConnect();
+    const excursions = await ExcursionCard.find({ isPublished: true })
+      .populate("excursionProduct")
+      .sort({ title: 1 });
     return NextResponse.json(excursions);
   } catch (error) {
-    console.error('Ошибка при получении экскурсий:', error);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(
+      { error: "Ошибка при получении экскурсий" },
+      { status: 500 }
+    );
   }
 }
 

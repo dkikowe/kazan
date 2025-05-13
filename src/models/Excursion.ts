@@ -9,6 +9,29 @@ const excursionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  duration: {
+    type: Number,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  imageUrl: {
+    type: String,
+  },
+  meetingPoint: {
+    type: String,
+    required: true,
+  },
+  meetingTime: {
+    type: String,
+    required: true,
+  },
+  maxGroupSize: {
+    type: Number,
+    required: true,
+  },
   gallery: [{
     url: String,
     alt: String,

@@ -47,6 +47,18 @@ const ExcursionCardSchema = new Schema({
   },
   images: [{
     type: String,
+    required: false,
+    validate: {
+      validator: function(url: string) {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      message: 'Некорректный URL изображения'
+    }
   }],
   videoUrl: {
     type: String,

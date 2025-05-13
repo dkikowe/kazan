@@ -82,6 +82,25 @@ export async function PUT(request: NextRequest) {
     
     const data = await request.json();
     console.log("Данные для обновления получены");
+
+    // Проверяем и обрабатываем изображения
+    if (data.card && Array.isArray(data.card.images)) {
+      console.log("Обновление галереи изображений:", data.card.images.length, "изображений");
+      
+      // Удаляем дубликаты URL-ов изображений
+      const uniqueUrls = Array.from(new Set<string>(data.card.images));
+      
+      // Проверяем валидность URL-ов
+      data.card.images = uniqueUrls.filter((url: string) => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          console.warn("Некорректный URL изображения:", url);
+          return false;
+        }
+      });
+    }
     
     // Проверка товара экскурсии
     if (data.card?.excursionProduct) {
@@ -116,57 +135,51 @@ export async function PUT(request: NextRequest) {
       delete data.card.excursionProduct;
     }
     
-    // Подготавливаем данные
+    // Подготавливаем данные для обновления
     const updateData = {
       ...data.card,
+      images: data.card.images || [],
     };
     
-    // Обновляем экскурсию используя модель Mongoose
-    try {
-      // Используем модель ExcursionCard вместо прямого обращения к коллекции
-      const updatedExcursion = await ExcursionCard.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        { new: true, runValidators: false }
-      ).lean();
-      
-      if (!updatedExcursion) {
-        console.error(`Экскурсия с ID ${id} не найдена`);
-        return NextResponse.json(
-          { error: "Экскурсия не найдена" },
-          { status: 404 }
-        );
-      }
-      
-      // Обновляем коммерческие данные если есть
-      if (data.commercial && updatedExcursion && 'commercialSlug' in updatedExcursion && updatedExcursion.commercialSlug) {
-        const db = mongoose.connection.db;
-        if (db) {
-          const commercialData = {
-            ...data.commercial,
-            updatedAt: new Date()
-          };
-          
-          await db.collection("commercialexcursions").updateOne(
-            { commercialSlug: updatedExcursion.commercialSlug },
-            { 
-              $set: commercialData,
-              $setOnInsert: { createdAt: new Date() }
-            },
-            { upsert: true }
-          );
-        }
-      }
-      
-      console.log(`Экскурсия с ID ${id} успешно обновлена`);
-      return NextResponse.json(updatedExcursion);
-    } catch (err) {
-      console.error("Ошибка при обновлении экскурсии:", err);
+    // Обновляем данные экскурсии
+    const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error("Не удалось получить подключение к базе данных");
+    }
+
+    const result = await db.collection("excursioncards").findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updateData },
+      { returnDocument: "after" }
+    );
+    
+    if (!result || !result.value) {
+      console.error(`Экскурсия с ID ${id} не найдена`);
       return NextResponse.json(
-        { error: "Ошибка при обновлении экскурсии", details: err instanceof Error ? err.message : String(err) },
-        { status: 500 }
+        { error: "Экскурсия не найдена" },
+        { status: 404 }
       );
     }
+    
+    // Обновляем коммерческие данные если есть
+    if (data.commercial && 'commercialSlug' in result.value && result.value.commercialSlug) {
+      const commercialData = {
+        ...data.commercial,
+        updatedAt: new Date()
+      };
+      
+      await db.collection("commercialexcursions").updateOne(
+        { commercialSlug: result.value.commercialSlug },
+        { 
+          $set: commercialData,
+          $setOnInsert: { createdAt: new Date() }
+        },
+        { upsert: true }
+      );
+    }
+    
+    console.log(`Экскурсия с ID ${id} успешно обновлена`);
+    return NextResponse.json(result.value);
   } catch (error) {
     console.error("Ошибка при обработке запроса:", error);
     return NextResponse.json(

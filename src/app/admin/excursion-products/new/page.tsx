@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
+import { GalleryUpload } from "@/components/ui/gallery-upload";
+import { Label } from "@/components/ui/label";
 
 const productFormSchema = z.object({
   title: z.string().min(1, "Название обязательно"),
@@ -126,6 +128,7 @@ export default function NewProductPage() {
   const [excursions, setExcursions] = useState<
     Array<{ _id: string; title: string }>
   >([]);
+  const [gallery, setGallery] = useState<string[]>([]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -242,6 +245,7 @@ export default function NewProductPage() {
             autoStopsCount: Number(group.groupSettings.autoStopsCount),
           },
         })),
+        gallery,
       };
 
       const response = await fetch("/api/excursion-products", {
@@ -1115,6 +1119,18 @@ export default function NewProductPage() {
               >
                 Добавить группу
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Галерея изображений</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <FormLabel>Галерея изображений</FormLabel>
+                <GalleryUpload value={gallery} onChange={setGallery} />
+              </div>
             </CardContent>
           </Card>
 

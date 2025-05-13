@@ -60,9 +60,7 @@ const productFormSchema = z.object({
       })
     )
     .default([]),
-  startTimes: z
-    .array(z.string().min(1, "Время начала обязательно"))
-    .default([""]),
+  startTimes: z.array(z.string()).default([""]),
   meetingPoints: z
     .array(
       z.object({
@@ -133,23 +131,35 @@ export default function EditForm({
   excursionId,
 }: EditFormProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [startTimes, setStartTimes] = useState<string[]>([""]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: {
-      title: "",
-      services: [],
-      dateRanges: [],
-      startTimes: [""],
-      meetingPoints: [],
-      tickets: [],
-      paymentOptions: [],
-      additionalServices: [],
-      groups: [],
-      isPublished: false,
+      title: initialData?.title || "",
+      services: initialData?.services || [],
+      dateRanges:
+        initialData?.dateRanges?.map((range) => ({
+          ...range,
+          start: new Date(range.start),
+          end: new Date(range.end),
+          excludedDates:
+            range.excludedDates?.map((date) => new Date(date)) || [],
+        })) || [],
+      startTimes: initialData?.startTimes || [""],
+      meetingPoints: initialData?.meetingPoints || [],
+      tickets: initialData?.tickets || [],
+      paymentOptions: initialData?.paymentOptions || [],
+      additionalServices: initialData?.additionalServices || [],
+      groups:
+        initialData?.groups?.map((group) => ({
+          ...group,
+          date: new Date(group.date),
+        })) || [],
+      isPublished: initialData?.isPublished || false,
     },
   });
 
@@ -163,49 +173,35 @@ export default function EditForm({
   });
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await fetch(
-          `/api/excursion-products/${id}?_=${Date.now()}`
-        );
+    if (initialData) {
+      setStartTimes(initialData.startTimes || [""]);
 
-        if (!response.ok) {
-          throw new Error("Не удалось загрузить товар");
-        }
-
-        const data = await response.json();
-
-        // Преобразуем даты в объекты Date
-        if (data.dateRanges) {
-          data.dateRanges = data.dateRanges.map((range: any) => ({
+      // Обновляем значения формы при получении initialData
+      form.reset({
+        title: initialData.title || "",
+        services: initialData.services || [],
+        dateRanges:
+          initialData.dateRanges?.map((range) => ({
             ...range,
             start: new Date(range.start),
             end: new Date(range.end),
-            excludedDates: (range.excludedDates || []).map(
-              (date: string) => new Date(date)
-            ),
-          }));
-        }
-
-        if (data.groups) {
-          data.groups = data.groups.map((group: any) => ({
+            excludedDates:
+              range.excludedDates?.map((date) => new Date(date)) || [],
+          })) || [],
+        startTimes: initialData.startTimes || [""],
+        meetingPoints: initialData.meetingPoints || [],
+        tickets: initialData.tickets || [],
+        paymentOptions: initialData.paymentOptions || [],
+        additionalServices: initialData.additionalServices || [],
+        groups:
+          initialData.groups?.map((group) => ({
             ...group,
             date: new Date(group.date),
-          }));
-        }
-
-        form.reset(data);
-      } catch (error) {
-        console.error("Ошибка при загрузке товара:", error);
-        setError("Не удалось загрузить товар");
-        toast.error("Ошибка при загрузке товара");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [id, form]);
+          })) || [],
+        isPublished: initialData.isPublished || false,
+      });
+    }
+  }, [initialData, form]);
 
   const onSubmit = async (values: ProductFormData) => {
     try {
@@ -266,6 +262,21 @@ export default function EditForm({
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddStartTime = () => {
+    setStartTimes([...startTimes, ""]);
+  };
+
+  const handleRemoveStartTime = (index: number) => {
+    setStartTimes(startTimes.filter((_, i) => i !== index));
+  };
+
+  const handleStartTimeChange = (index: number, value: string) => {
+    const newStartTimes = [...startTimes];
+    newStartTimes[index] = value;
+    setStartTimes(newStartTimes);
+    form.setValue("startTimes", newStartTimes);
   };
 
   if (loading) {
@@ -544,47 +555,36 @@ export default function EditForm({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {form.watch("startTimes").map((_, index) => (
+                {startTimes.map((time, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`startTimes.${index}`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Время начала (например, 10:00)"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const currentTimes = form.getValues("startTimes");
-                        form.setValue("startTimes", [
-                          ...currentTimes.slice(0, index),
-                          ...currentTimes.slice(index + 1),
-                        ]);
-                      }}
-                    >
-                      Удалить
-                    </Button>
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input
+                          value={time}
+                          onChange={(e) =>
+                            handleStartTimeChange(index, e.target.value)
+                          }
+                          placeholder="Время начала (например, 10:00)"
+                        />
+                      </FormControl>
+                    </FormItem>
+                    {startTimes.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveStartTime(index)}
+                      >
+                        Удалить
+                      </Button>
+                    )}
                   </div>
                 ))}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const currentTimes = form.getValues("startTimes");
-                    form.setValue("startTimes", [...currentTimes, ""]);
-                  }}
+                  onClick={handleAddStartTime}
                 >
                   Добавить время начала
                 </Button>

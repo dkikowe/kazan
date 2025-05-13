@@ -10,87 +10,110 @@ import FilterGroup from "@/models/FilterGroup";
 // Регистрируем модель Excursion в mongoose
 // @ts-ignore: игнорируем ошибку для этого импорта
 import excursionModel from "../../../models/Excursion";
+import dbConnect from "@/lib/dbConnect";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const { params } = context;
+  console.log("API: Получен запрос для товара экскурсии с ID:", params.id);
+
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    console.log(`Запрос информации о товаре с ID: ${id}`);
-    await connectToDatabase();
-    const product = await ExcursionProduct.findById(id);
+    await dbConnect();
+    console.log("API: Подключение к базе данных успешно");
+
+    const excursionProduct = await ExcursionProduct.findById(params.id)
+      .populate('excursionCard', 'title description images')
+      .lean();
     
-    if (!product) {
-      console.error(`Товар с ID ${id} не найден`);
+    console.log("API: Поиск товара экскурсии выполнен");
+    
+    if (!excursionProduct) {
+      console.log("API: Товар экскурсии не найден");
       return NextResponse.json(
-        { error: `Товар с ID ${id} не найден` },
+        { error: "Товар экскурсии не найден" },
         { status: 404 }
       );
     }
 
-    console.log(`Информация о товаре ${id} успешно получена`);
-    return NextResponse.json(product);
-  } catch (error: any) {
-    console.error("Ошибка при получении информации о товаре:", error);
+    // Преобразуем даты в строки для корректной сериализации
+    const formattedProduct = {
+      ...excursionProduct,
+      dateRanges: excursionProduct.dateRanges?.map(range => ({
+        ...range,
+        start: range.start?.toISOString(),
+        end: range.end?.toISOString(),
+        excludedDates: range.excludedDates?.map(date => date.toISOString())
+      })),
+      groups: excursionProduct.groups?.map(group => ({
+        ...group,
+        date: group.date?.toISOString()
+      }))
+    };
+
+    console.log("API: Товар экскурсии найден, отправляем ответ");
+    return NextResponse.json(formattedProduct);
+  } catch (error) {
+    console.error("API: Ошибка при получении товара экскурсии:", error);
     return NextResponse.json(
-      { error: "Не удалось получить информацию о товаре" },
+      { error: "Ошибка при получении товара экскурсии" },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const { params } = context;
+  console.log("API: Получен запрос на обновление товара с ID:", params.id);
+
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    console.log(`Обновление товара с ID: ${id}`);
-    
+    await dbConnect();
+    console.log("API: Подключение к базе данных успешно");
+
     const data = await request.json();
-    console.log("Полученные данные для обновления:", JSON.stringify(data, null, 2));
-    
-    await connectToDatabase();
-    
-    // Проверяем существование товара перед обновлением
-    const existingProduct = await ExcursionProduct.findById(id);
-    if (!existingProduct) {
-      console.error(`Товар с ID ${id} не найден`);
+    console.log("API: Получены данные для обновления:", data);
+
+    // Преобразуем строковые даты в объекты Date
+    const formattedData = {
+      ...data,
+      dateRanges: data.dateRanges?.map((range: any) => ({
+        ...range,
+        start: new Date(range.start),
+        end: new Date(range.end),
+        excludedDates: range.excludedDates?.map((date: string) => new Date(date)) || []
+      })),
+      groups: data.groups?.map((group: any) => ({
+        ...group,
+        date: new Date(group.date)
+      }))
+    };
+
+    console.log("API: Подготовленные данные:", formattedData);
+
+    const result = await ExcursionProduct.findByIdAndUpdate(
+      params.id,
+      { $set: formattedData },
+      { new: true }
+    );
+
+    if (!result) {
+      console.log("API: Товар не найден");
       return NextResponse.json(
-        { message: `Товар с ID ${id} не найден` },
+        { error: "Товар не найден" },
         { status: 404 }
       );
     }
 
-    // Подготавливаем данные для обновления
-    const updateData = { ...data };
-    
-    // Если excursionCard пустая строка, заменяем на null
-    if (updateData.excursionCard === "") {
-      updateData.excursionCard = null;
-    }
-
-    console.log("Подготовленные данные для обновления:", JSON.stringify(updateData, null, 2));
-    
-    const updatedProduct = await ExcursionProduct.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { 
-        new: true, 
-        runValidators: true,
-        context: 'query'
-      }
-    );
-    
-    if (!updatedProduct) {
-      console.error(`Не удалось обновить товар с ID ${id}`);
-      return NextResponse.json(
-        { message: "Не удалось обновить товар" },
-        { status: 500 }
-      );
-    }
-
-    console.log(`Товар ${id} успешно обновлен:`, JSON.stringify(updatedProduct, null, 2));
-    return NextResponse.json(updatedProduct);
-  } catch (error: any) {
-    console.error("Ошибка при обновлении товара:", error);
+    console.log("API: Товар успешно обновлен");
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("API: Ошибка при обновлении товара:", error);
     return NextResponse.json(
-      { message: error.message || "Не удалось обновить товар" },
+      { error: "Ошибка при обновлении товара" },
       { status: 500 }
     );
   }
