@@ -2,6 +2,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
+import Tag from "@/models/Tag";
 import mongoose from "mongoose";
 import { nanoid } from 'nanoid';
 import dbConnect from "@/lib/dbConnect";
