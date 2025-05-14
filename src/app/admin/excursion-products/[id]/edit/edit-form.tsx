@@ -133,38 +133,48 @@ export default function EditForm({
   excursionId,
 }: EditFormProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startTimes, setStartTimes] = useState<string[]>([""]);
+  const [productData, setProductData] = useState<ProductFormData | null>(null);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: {
-      title: initialData?.title || "",
-      images: initialData?.images || [],
-      services: initialData?.services || [],
-      dateRanges:
-        initialData?.dateRanges?.map((range) => ({
-          ...range,
-          start: new Date(range.start),
-          end: new Date(range.end),
-          excludedDates:
-            range.excludedDates?.map((date) => new Date(date)) || [],
-        })) || [],
-      startTimes: initialData?.startTimes || [""],
-      meetingPoints: initialData?.meetingPoints || [],
-      tickets: initialData?.tickets || [],
-      paymentOptions: initialData?.paymentOptions || [],
-      additionalServices: initialData?.additionalServices || [],
-      groups:
-        initialData?.groups?.map((group) => ({
-          ...group,
-          date: new Date(group.date),
-        })) || [],
-      isPublished: initialData?.isPublished || false,
+      title: "",
+      images: [],
+      services: [],
+      dateRanges: [],
+      startTimes: [""],
+      meetingPoints: [],
+      tickets: [],
+      paymentOptions: [],
+      additionalServices: [],
+      groups: [],
+      isPublished: false,
     },
   });
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`/api/excursion-products/${id}`);
+        if (!response.ok) {
+          throw new Error("Ошибка при загрузке товара");
+        }
+        const data = await response.json();
+        setProductData(data);
+      } catch (error) {
+        console.error("Ошибка при загрузке товара:", error);
+        toast.error("Не удалось загрузить товар");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const {
     fields: dateRangeFields,
@@ -176,36 +186,36 @@ export default function EditForm({
   });
 
   useEffect(() => {
-    if (initialData) {
-      setStartTimes(initialData.startTimes || [""]);
+    if (productData) {
+      setStartTimes(productData.startTimes || [""]);
 
       // Обновляем значения формы при получении initialData
       form.reset({
-        title: initialData.title || "",
-        images: initialData.images || [],
-        services: initialData.services || [],
+        title: productData.title || "",
+        images: productData.images || [],
+        services: productData.services || [],
         dateRanges:
-          initialData.dateRanges?.map((range) => ({
+          productData.dateRanges?.map((range) => ({
             ...range,
             start: new Date(range.start),
             end: new Date(range.end),
             excludedDates:
               range.excludedDates?.map((date) => new Date(date)) || [],
           })) || [],
-        startTimes: initialData.startTimes || [""],
-        meetingPoints: initialData.meetingPoints || [],
-        tickets: initialData.tickets || [],
-        paymentOptions: initialData.paymentOptions || [],
-        additionalServices: initialData.additionalServices || [],
+        startTimes: productData.startTimes || [""],
+        meetingPoints: productData.meetingPoints || [],
+        tickets: productData.tickets || [],
+        paymentOptions: productData.paymentOptions || [],
+        additionalServices: productData.additionalServices || [],
         groups:
-          initialData.groups?.map((group) => ({
+          productData.groups?.map((group) => ({
             ...group,
             date: new Date(group.date),
           })) || [],
-        isPublished: initialData.isPublished || false,
+        isPublished: productData.isPublished || false,
       });
     }
-  }, [initialData, form]);
+  }, [productData, form]);
 
   const onSubmit = async (values: ProductFormData) => {
     try {
@@ -250,19 +260,18 @@ export default function EditForm({
         throw new Error(responseData.message || "Не удалось обновить товар");
       }
 
-      console.log("Товар успешно обновлен:", responseData);
       toast.success("Товар успешно обновлен");
 
-      setTimeout(() => {
-        if (excursionId) {
-          router.push(`/admin/excursions/${excursionId}/products`);
-        } else {
-          router.push(`/admin/excursion-products`);
-        }
-      }, 1000);
-    } catch (error: any) {
+      if (excursionId) {
+        router.push(`/admin/excursions/${excursionId}/products`);
+      } else {
+        router.push("/admin/excursion-products");
+      }
+    } catch (error) {
       console.error("Ошибка при сохранении товара:", error);
-      toast.error(error.message || "Ошибка при обновлении товара");
+      toast.error(
+        error instanceof Error ? error.message : "Не удалось сохранить товар"
+      );
     } finally {
       setSaving(false);
     }
