@@ -20,18 +20,17 @@ import { z } from "zod";
 import { SubmitHandler } from "react-hook-form";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default async function NewProductPage({ params }: PageProps) {
-  const resolvedParams = await params;
+export default function NewProductPage({ params }: PageProps) {
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Создание нового товара</h1>
       </div>
-      <NewProductForm excursionId={resolvedParams.id} />
+      <NewProductForm excursionId={params.id} />
     </div>
   );
 }

@@ -34,11 +34,11 @@ interface IExcursionProduct {
 }
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
-export default async function ServicesPage({ params }: PageProps) {
-  const { id } = await params;
+export default function ServicesPage({ params }: PageProps) {
+  const { id } = params;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

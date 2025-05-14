@@ -4,12 +4,11 @@ import Link from "next/link";
 import { ProductsList } from "./products-list";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default async function ExcursionProductsPage({ params }: PageProps) {
-  const resolvedParams = await params;
+export default function ExcursionProductsPage({ params }: PageProps) {
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center gap-4 mb-6">
@@ -21,14 +20,14 @@ export default async function ExcursionProductsPage({ params }: PageProps) {
         <h1 className="text-2xl font-bold">Товары экскурсии</h1>
       </div>
       <div className="flex justify-end mb-6">
-        <Link href={`/admin/excursions/${resolvedParams.id}/products/new`}>
+        <Link href={`/admin/excursions/${params.id}/products/new`}>
           <Button className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Добавить товар
           </Button>
         </Link>
       </div>
-      <ProductsList excursionId={resolvedParams.id} />
+      <ProductsList excursionId={params.id} />
     </div>
   );
 }
