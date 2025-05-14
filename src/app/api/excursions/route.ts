@@ -7,14 +7,38 @@ import { nanoid } from 'nanoid';
 import dbConnect from "@/lib/dbConnect";
 
 // GET /api/excursions
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await dbConnect();
-    const excursions = await ExcursionCard.find({ isPublished: true })
+    
+    // Получаем параметры запроса
+    const { searchParams } = new URL(request.url);
+    const tagId = searchParams.get('tag');
+    
+    // Создаём базовый запрос
+    let query: any = { isPublished: true };
+    
+    // Если указан тег, добавляем его в запрос
+    if (tagId) {
+      // Используем $in для поиска tagId в массиве tags
+      // Также можно использовать ObjectId для корректного сравнения
+      const tagObjectId = new mongoose.Types.ObjectId(tagId);
+      query.tags = { $in: [tagObjectId, tagId] };
+    }
+    
+    console.log("Запрос экскурсий с фильтром:", JSON.stringify(query));
+    
+    // Получаем экскурсии с учетом фильтра по тегам
+    const excursions = await ExcursionCard.find(query)
       .populate("excursionProduct")
+      .populate("tags") // Добавляем информацию о тегах
       .sort({ title: 1 });
+      
+    console.log(`Найдено ${excursions.length} экскурсий`);
+    
     return NextResponse.json(excursions);
   } catch (error) {
+    console.error("Ошибка при получении экскурсий:", error);
     return NextResponse.json(
       { error: "Ошибка при получении экскурсий" },
       { status: 500 }

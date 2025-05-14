@@ -31,12 +31,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface CatalogAsideProps {
   initialFilters?: FilterGroup[];
 }
 
 export const CatalogAside = ({ initialFilters }: CatalogAsideProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState<FilterGroup[]>(initialFilters || []);
   const [priceRange, setPriceRange] = useState<[number, number]>([800, 7200]);
   const [selectedFilters, setSelectedFilters] = useState<
@@ -62,9 +65,46 @@ export const CatalogAside = ({ initialFilters }: CatalogAsideProps) => {
     }
   }, [initialFilters]);
 
+  // Инициализация выбранных фильтров из URL при первой загрузке
+  useEffect(() => {
+    const tagId = searchParams.get("tag");
+    if (tagId) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        Теги: [tagId],
+      }));
+    }
+  }, [searchParams]);
+
   const resetFilters = () => {
+    console.log("Сброс фильтров");
     setPriceRange([800, 7200]);
     setSelectedFilters({});
+    router.push("/catalog");
+  };
+
+  const applyFilters = () => {
+    // Создаем новые параметры запроса
+    const params = new URLSearchParams();
+
+    // Добавляем выбранные теги в параметры
+    if (selectedFilters["Теги"] && selectedFilters["Теги"].length > 0) {
+      const tagId = selectedFilters["Теги"][0];
+      console.log("Применение фильтра по тегу:", tagId);
+      params.set("tag", tagId); // Поддерживаем пока только один тег
+    } else {
+      console.log("Нет выбранных тегов для фильтрации");
+    }
+
+    // Выводим информацию о выбранных фильтрах
+    console.log("Выбранные фильтры:", selectedFilters);
+
+    // Формируем URL для редиректа
+    const url = `/catalog${params.toString() ? `?${params.toString()}` : ""}`;
+    console.log("Редирект на URL:", url);
+
+    // Перенаправляем на ту же страницу с новыми параметрами
+    router.push(url);
   };
 
   if (isLoading) {
@@ -177,6 +217,7 @@ export const CatalogAside = ({ initialFilters }: CatalogAsideProps) => {
       <Button
         variant={"default"}
         className="w-full rounded-full h-[2.688rem] font-bold leading-[112%] text-[0.938rem]"
+        onClick={applyFilters}
       >
         Применить
       </Button>
@@ -185,9 +226,14 @@ export const CatalogAside = ({ initialFilters }: CatalogAsideProps) => {
 };
 
 export const CatalogAsideMobile = ({ initialFilters }: CatalogAsideProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<FilterGroup[]>(initialFilters || []);
   const [priceRange, setPriceRange] = useState<[number, number]>([800, 7200]);
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, string[]>
+  >({});
   const [isLoading, setIsLoading] = useState(!initialFilters);
 
   useEffect(() => {
@@ -207,6 +253,50 @@ export const CatalogAsideMobile = ({ initialFilters }: CatalogAsideProps) => {
       fetchFilters();
     }
   }, [initialFilters]);
+
+  // Инициализация выбранных фильтров из URL при первой загрузке
+  useEffect(() => {
+    const tagId = searchParams.get("tag");
+    if (tagId) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        Теги: [tagId],
+      }));
+    }
+  }, [searchParams]);
+
+  const resetFilters = () => {
+    console.log("Сброс фильтров");
+    setPriceRange([800, 7200]);
+    setSelectedFilters({});
+    router.push("/catalog");
+    setOpen(false);
+  };
+
+  const applyFilters = () => {
+    // Создаем новые параметры запроса
+    const params = new URLSearchParams();
+
+    // Добавляем выбранные теги в параметры
+    if (selectedFilters["Теги"] && selectedFilters["Теги"].length > 0) {
+      const tagId = selectedFilters["Теги"][0];
+      console.log("Применение фильтра по тегу:", tagId);
+      params.set("tag", tagId); // Поддерживаем пока только один тег
+    } else {
+      console.log("Нет выбранных тегов для фильтрации");
+    }
+
+    // Выводим информацию о выбранных фильтрах
+    console.log("Выбранные фильтры:", selectedFilters);
+
+    // Формируем URL для редиректа
+    const url = `/catalog${params.toString() ? `?${params.toString()}` : ""}`;
+    console.log("Редирект на URL:", url);
+
+    // Перенаправляем на ту же страницу с новыми параметрами
+    router.push(url);
+    setOpen(false);
+  };
 
   if (isLoading) {
     return (
@@ -234,7 +324,7 @@ export const CatalogAsideMobile = ({ initialFilters }: CatalogAsideProps) => {
             height={12}
             className="object-cover"
           />
-          <span>Сбросить</span>
+          <span onClick={resetFilters}>Сбросить</span>
         </div>
       </Button>
 
@@ -251,64 +341,43 @@ export const CatalogAsideMobile = ({ initialFilters }: CatalogAsideProps) => {
                     type="number"
                     value={priceRange[0]}
                     onChange={(e) =>
-                      setPriceRange([+e.target.value, priceRange[1]])
+                      setPriceRange([Number(e.target.value), priceRange[1]])
                     }
                     className="w-full h-12 rounded-xl border border-muted bg-transparent px-4 text-sm"
                   />
-                  <span>–</span>
+                  <span className="text-[1.063rem]">–</span>
                   <input
                     type="number"
                     value={priceRange[1]}
                     onChange={(e) =>
-                      setPriceRange([priceRange[0], +e.target.value])
+                      setPriceRange([priceRange[0], Number(e.target.value)])
                     }
                     className="w-full h-12 rounded-xl border border-muted bg-transparent px-4 text-sm"
                   />
                 </div>
                 <Slider
-                  value={priceRange}
-                  onValueChange={(val) =>
-                    setPriceRange(val as [number, number])
-                  }
                   min={800}
                   max={7200}
                   step={100}
+                  value={priceRange}
+                  onValueChange={(value) => setPriceRange([value[0], value[1]])}
                 />
               </AccordionContent>
             </AccordionItem>
-
             {filters.map((filterGroup) => (
-              <AccordionItem key={filterGroup.id} value={filterGroup.id}>
-                <AccordionTrigger className="capitalize font-medium text-[1.063rem]">
-                  {filterGroup.title}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="flex flex-col gap-4 pt-2">
-                    {filterGroup.options.map((option) => (
-                      <div
-                        key={option.id}
-                        className="flex items-center gap-2.5"
-                      >
-                        <Checkbox id={option.id} />
-                        <label
-                          htmlFor={option.id}
-                          className="text-sm text-muted-foreground"
-                        >
-                          {option.title}{" "}
-                          <span className="text-[#C4C4C4]">
-                            ({option.count})
-                          </span>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+              <FilterAccordion
+                key={filterGroup.id}
+                category={filterGroup.title}
+                options={filterGroup.options}
+                selectedFilters={selectedFilters}
+                setSelectedFilters={setSelectedFilters}
+              />
             ))}
           </Accordion>
           <Button
-            variant={"default"}
-            className="w-full rounded-full h-[2.688rem] font-bold leading-[112%] text-[0.938rem]"
+            variant="default"
+            className="w-full rounded-full"
+            onClick={applyFilters}
           >
             Применить
           </Button>

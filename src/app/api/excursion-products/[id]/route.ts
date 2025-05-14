@@ -16,14 +16,14 @@ export async function GET(
   request: Request,
   context: { params: { id: string } }
 ) {
-  const { params } = context;
-  console.log("API: Получен запрос для товара экскурсии с ID:", params.id);
+  const id = context.params.id;
+  console.log("API: Получен запрос для товара экскурсии с ID:", id);
 
   try {
-    await dbConnect();
+    await connectToDatabase();
     console.log("API: Подключение к базе данных успешно");
 
-    const excursionProduct = await ExcursionProduct.findById(params.id)
+    const excursionProduct = await ExcursionProduct.findById(id)
       .populate('excursionCard', 'title description images')
       .lean();
     
@@ -54,10 +54,10 @@ export async function GET(
 
     console.log("API: Товар экскурсии найден, отправляем ответ");
     return NextResponse.json(formattedProduct);
-  } catch (error) {
+  } catch (error: any) {
     console.error("API: Ошибка при получении товара экскурсии:", error);
     return NextResponse.json(
-      { error: "Ошибка при получении товара экскурсии" },
+      { error: error.message || "Не удалось получить товар экскурсии" },
       { status: 500 }
     );
   }
@@ -67,108 +67,103 @@ export async function PUT(
   request: Request,
   context: { params: { id: string } }
 ) {
-  const { params } = context;
-  console.log("API: Получен запрос на обновление товара с ID:", params.id);
+  const id = context.params.id;
+  console.log("API: Получен запрос на обновление товара экскурсии с ID:", id);
 
   try {
-    await dbConnect();
+    await connectToDatabase();
     console.log("API: Подключение к базе данных успешно");
 
     const data = await request.json();
-    console.log("API: Получены данные для обновления:", data);
+    console.log("API: Получены данные для обновления:", JSON.stringify(data, null, 2));
 
-    // Преобразуем строковые даты в объекты Date
-    const formattedData = {
-      ...data,
-      dateRanges: data.dateRanges?.map((range: any) => ({
-        ...range,
-        start: new Date(range.start),
-        end: new Date(range.end),
-        excludedDates: range.excludedDates?.map((date: string) => new Date(date)) || []
-      })),
-      groups: data.groups?.map((group: any) => ({
-        ...group,
-        date: new Date(group.date)
-      }))
-    };
+    // Проверяем и обрабатываем изображения
+    let images: string[] = [];
+    if (data.images && Array.isArray(data.images)) {
+      console.log("API: Обработка изображений из поля images");
+      // Удаляем дубликаты URL изображений
+      const uniqueUrls = Array.from(new Set<string>(data.images));
+      // Фильтруем некорректные URL
+      images = uniqueUrls.filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          console.warn("API: Некорректный URL изображения:", url);
+          return false;
+        }
+      });
+      console.log("API: Обработано изображений:", images.length);
+    } else if (data.gallery && Array.isArray(data.gallery)) {
+      // Для обратной совместимости проверяем поле gallery
+      console.log("API: Обработка изображений из поля gallery");
+      // Удаляем дубликаты URL изображений
+      const uniqueUrls = Array.from(new Set<string>(data.gallery));
+      // Фильтруем некорректные URL
+      images = uniqueUrls.filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          console.warn("API: Некорректный URL изображения:", url);
+          return false;
+        }
+      });
+      console.log("API: Обработано изображений:", images.length);
+    }
 
-    console.log("API: Подготовленные данные:", formattedData);
-
-    const result = await ExcursionProduct.findByIdAndUpdate(
-      params.id,
-      { $set: formattedData },
+    const updatedProduct = await ExcursionProduct.findByIdAndUpdate(
+      id,
+      { ...data, images },
       { new: true }
-    );
+    ).populate('excursionCard', 'title description images');
 
-    if (!result) {
-      console.log("API: Товар не найден");
+    if (!updatedProduct) {
+      console.log("API: Товар экскурсии не найден");
       return NextResponse.json(
-        { error: "Товар не найден" },
+        { error: "Товар экскурсии не найден" },
         { status: 404 }
       );
     }
 
-    console.log("API: Товар успешно обновлен");
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("API: Ошибка при обновлении товара:", error);
+    console.log("API: Товар экскурсии успешно обновлен");
+    return NextResponse.json(updatedProduct);
+  } catch (error: any) {
+    console.error("API: Ошибка при обновлении товара экскурсии:", error);
     return NextResponse.json(
-      { error: "Ошибка при обновлении товара" },
+      { error: error.message || "Не удалось обновить товар экскурсии" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id;
+  console.log("API: Получен запрос на удаление товара экскурсии с ID:", id);
+
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    console.log(`Запрос на удаление товара с ID: ${id}`);
     await connectToDatabase();
-    
-    // Проверяем существование товара перед удалением
-    const existingProduct = await ExcursionProduct.findById(id);
-    if (!existingProduct) {
-      console.error(`Товар с ID ${id} не найден`);
+    console.log("API: Подключение к базе данных успешно");
+
+    const deletedProduct = await ExcursionProduct.findByIdAndDelete(id);
+
+    if (!deletedProduct) {
+      console.log("API: Товар экскурсии не найден");
       return NextResponse.json(
-        { error: `Товар с ID ${id} не найден` },
+        { error: "Товар экскурсии не найден" },
         { status: 404 }
       );
     }
-    
-    console.log(`Найден товар для удаления: ${existingProduct._id} - экскурсия: ${existingProduct.excursionCard}`);
 
-    // Проверяем, есть ли связанные сущности
-    try {
-      // Здесь можно добавить проверку на связанные бронирования и т.д.
-      // Например: const bookings = await Booking.find({ product: id });
-      // if (bookings.length > 0) { throw new Error('Невозможно удалить товар с бронированиями'); }
-    } catch (err) {
-      console.error("Ошибка при проверке связанных сущностей:", err);
-      return NextResponse.json(
-        { error: "Ошибка при проверке связанных с товаром данных" },
-        { status: 500 }
-      );
-    }
-
-    const product = await ExcursionProduct.findByIdAndDelete(id);
-    
-    if (!product) {
-      console.error(`Не удалось удалить товар с ID ${id}`);
-      return NextResponse.json(
-        { error: "Не удалось удалить товар" },
-        { status: 500 }
-      );
-    }
-
-    console.log(`Товар с ID ${id} успешно удален`);
-    return NextResponse.json({ 
-      message: "Товар успешно удален",
-      deletedProduct: product 
-    });
+    console.log("API: Товар экскурсии успешно удален");
+    return NextResponse.json({ message: "Товар экскурсии успешно удален" });
   } catch (error: any) {
-    console.error("Ошибка при удалении товара:", error);
+    console.error("API: Ошибка при удалении товара экскурсии:", error);
     return NextResponse.json(
-      { error: error.message || "Ошибка при удалении товара" },
+      { error: error.message || "Не удалось удалить товар экскурсии" },
       { status: 500 }
     );
   }

@@ -21,9 +21,11 @@ export function GalleryUpload({ value, onChange }: GalleryUploadProps) {
 
     try {
       setIsLoading(true);
+      console.log("Начало загрузки файлов:", files.length, "файлов");
       const newUrls: string[] = [];
 
       for (const file of files) {
+        console.log("Загрузка файла:", file.name, file.type, file.size);
         const formData = new FormData();
         formData.append("file", file);
 
@@ -34,10 +36,12 @@ export function GalleryUpload({ value, onChange }: GalleryUploadProps) {
 
         if (!response.ok) {
           const error = await response.json();
+          console.error("Ошибка при загрузке файла:", error);
           throw new Error(error.error || "Ошибка при загрузке файла");
         }
 
         const data = await response.json();
+        console.log("Файл успешно загружен:", data.url);
         if (data.url) {
           newUrls.push(data.url);
         }
@@ -45,6 +49,7 @@ export function GalleryUpload({ value, onChange }: GalleryUploadProps) {
 
       // Обновляем список URL-ов, сохраняя существующие
       const updatedUrls = [...value, ...newUrls];
+      console.log("Обновленный список URL-ов:", updatedUrls);
       onChange(updatedUrls);
       toast.success("Изображения успешно загружены");
     } catch (error) {
@@ -61,7 +66,9 @@ export function GalleryUpload({ value, onChange }: GalleryUploadProps) {
   };
 
   const handleRemove = (index: number) => {
+    console.log("Удаление изображения по индексу:", index);
     const newUrls = value.filter((_, i) => i !== index);
+    console.log("Новый список URL-ов после удаления:", newUrls);
     onChange(newUrls);
     toast.success("Изображение удалено");
   };
@@ -96,7 +103,11 @@ export function GalleryUpload({ value, onChange }: GalleryUploadProps) {
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
           >
-            <ImagePlus className="h-8 w-8" />
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            ) : (
+              <ImagePlus className="h-8 w-8" />
+            )}
           </Button>
         </div>
       </div>

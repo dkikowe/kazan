@@ -31,14 +31,26 @@ export const FilterAccordion = ({
 }: FilterAccordionProps) => {
   const handleFilterChange = (optionId: string) => {
     const currentCategoryFilters = selectedFilters[category] || [];
-    const newCategoryFilters = currentCategoryFilters.includes(optionId)
+    const isRemoving = currentCategoryFilters.includes(optionId);
+
+    console.log(
+      `${
+        isRemoving ? "Удаление" : "Добавление"
+      } фильтра: категория "${category}", id: "${optionId}"`
+    );
+
+    const newCategoryFilters = isRemoving
       ? currentCategoryFilters.filter((id) => id !== optionId)
       : [...currentCategoryFilters, optionId];
 
-    setSelectedFilters({
+    const newFilters = {
       ...selectedFilters,
       [category]: newCategoryFilters,
-    });
+    };
+
+    console.log("Фильтры после изменения:", newFilters);
+
+    setSelectedFilters(newFilters);
   };
 
   return (

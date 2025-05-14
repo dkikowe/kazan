@@ -13,12 +13,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useSearchParams } from "next/navigation";
 
 // Определяем тип данных экскурсии
 interface ExcursionProduct {
   _id: string;
   title: string;
   startTimes: string[];
+  images: string[]; // Добавляем массив изображений
   tickets: Array<{
     type: string;
     name: string;
@@ -31,6 +33,7 @@ interface Excursion {
   title: string;
   description: string;
   images: string[];
+  tags: Array<string | { _id: string; name: string; [key: string]: any }>; // Теги могут быть строками или объектами с _id
   isPublished: boolean;
   excursionProduct?: {
     _id: string;
@@ -40,11 +43,14 @@ interface Excursion {
 
 const FilterSection = () => {
   const isMobile = useIsMobile();
+  const searchParams = useSearchParams();
   const [excursions, setExcursions] = useState<Excursion[]>([]);
+  const [filteredExcursions, setFilteredExcursions] = useState<Excursion[]>([]);
   const [excursionProducts, setExcursionProducts] = useState<
     Record<string, ExcursionProduct>
   >({});
   const [loading, setLoading] = useState(true);
+  const tagId = searchParams.get("tag");
 
   useEffect(() => {
     const fetchExcursions = async () => {
@@ -81,6 +87,41 @@ const FilterSection = () => {
     fetchExcursions();
   }, []);
 
+  // Фильтрация экскурсий по тегу
+  useEffect(() => {
+    if (!excursions.length) return;
+
+    if (tagId) {
+      console.log("Фильтрация по тегу ID:", tagId);
+
+      const filtered = excursions.filter((excursion) => {
+        // Проверяем, есть ли у экскурсии массив тегов
+        if (!excursion.tags || !Array.isArray(excursion.tags)) {
+          return false;
+        }
+
+        // После populate теги могут быть объектами с _id или строками с ID
+        return excursion.tags.some(
+          (tag) =>
+            // Если тег - это объект с _id
+            (tag &&
+              typeof tag === "object" &&
+              "_id" in tag &&
+              (tag._id === tagId || tag._id.toString() === tagId)) ||
+            // Если тег - это строка
+            (typeof tag === "string" && tag === tagId)
+        );
+      });
+
+      console.log(
+        `Отфильтровано ${filtered.length} экскурсий из ${excursions.length}`
+      );
+      setFilteredExcursions(filtered);
+    } else {
+      setFilteredExcursions(excursions);
+    }
+  }, [excursions, tagId]);
+
   return (
     <section className="max-w-[1440px] mx-auto">
       <div className="flex lg:w-[100%] w-[90%] mx-auto flex-col gap-[1.5rem] lg:gap-[2.313rem]">
@@ -95,21 +136,24 @@ const FilterSection = () => {
               <div className="col-span-full flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
-            ) : excursions.length === 0 ? (
+            ) : filteredExcursions.length === 0 ? (
               <div className="col-span-full text-center py-8">
                 Экскурсии не найдены
               </div>
             ) : (
-              excursions.map((excursion) => {
+              filteredExcursions.map((excursion) => {
                 // Получаем связанный товар для экскурсии
                 const product =
                   excursion.excursionProduct && excursion.excursionProduct._id
                     ? excursionProducts[excursion.excursionProduct._id]
                     : null;
 
-                // Используем первое изображение экскурсии или заглушку
+                // Используем первое изображение из товара экскурсии, если оно есть
+                // Иначе используем первое изображение экскурсии или заглушку
                 const imageUrl =
-                  excursion.images && excursion.images.length > 0
+                  product && product.images && product.images.length > 0
+                    ? product.images[0]
+                    : excursion.images && excursion.images.length > 0
                     ? excursion.images[0]
                     : "/images/catalog-filter/catalog1.png";
 

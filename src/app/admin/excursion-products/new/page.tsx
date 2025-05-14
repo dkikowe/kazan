@@ -128,7 +128,7 @@ export default function NewProductPage() {
   const [excursions, setExcursions] = useState<
     Array<{ _id: string; title: string }>
   >([]);
-  const [gallery, setGallery] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -245,7 +245,7 @@ export default function NewProductPage() {
             autoStopsCount: Number(group.groupSettings.autoStopsCount),
           },
         })),
-        gallery,
+        images: images,
       };
 
       const response = await fetch("/api/excursion-products", {
@@ -1129,7 +1129,7 @@ export default function NewProductPage() {
             <CardContent className="space-y-4">
               <div>
                 <FormLabel>Галерея изображений</FormLabel>
-                <GalleryUpload value={gallery} onChange={setGallery} />
+                <GalleryUpload value={images} onChange={setImages} />
               </div>
             </CardContent>
           </Card>

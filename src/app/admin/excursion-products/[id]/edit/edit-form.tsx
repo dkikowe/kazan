@@ -29,10 +29,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { GalleryUpload } from "@/components/ui/gallery-upload";
 
 const productFormSchema = z.object({
   excursionCard: z.string().optional(),
   title: z.string().min(1, "Название товара обязательно"),
+  images: z.array(z.string()).default([]),
   services: z
     .array(
       z.object({
@@ -140,6 +142,7 @@ export default function EditForm({
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: {
       title: initialData?.title || "",
+      images: initialData?.images || [],
       services: initialData?.services || [],
       dateRanges:
         initialData?.dateRanges?.map((range) => ({
@@ -179,6 +182,7 @@ export default function EditForm({
       // Обновляем значения формы при получении initialData
       form.reset({
         title: initialData.title || "",
+        images: initialData.images || [],
         services: initialData.services || [],
         dateRanges:
           initialData.dateRanges?.map((range) => ({
@@ -325,6 +329,24 @@ export default function EditForm({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="images"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Галерея изображений</FormLabel>
+                    <FormControl>
+                      <GalleryUpload
+                        value={field.value || []}
+                        onChange={(urls) => field.onChange(urls)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="isPublished"

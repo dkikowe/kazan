@@ -6,6 +6,7 @@ export interface IExcursionProduct extends Document {
     ref: 'ExcursionCard';
   };
   title: string;
+  images: string[];
   services: Array<{
     type: string;
     subtype: string;
@@ -71,6 +72,21 @@ const excursionProductSchema = new Schema<IExcursionProduct>({
     required: true,
     trim: true
   },
+  images: [{
+    type: String,
+    required: false,
+    validate: {
+      validator: function(url: string) {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      message: 'Некорректный URL изображения'
+    }
+  }],
   services: [{
     type: {
       type: String,

@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     await connectToDatabase();
     const data = await request.json();
     
-    console.log("Получены данные для создания товара:", data);
+    console.log("Получены данные для создания товара:", JSON.stringify(data, null, 2));
 
     // Проверяем обязательные поля
     if (!data.title) {
@@ -78,10 +78,46 @@ export async function POST(request: Request) {
       );
     }
 
+    // Проверяем и обрабатываем изображения
+    let images: string[] = [];
+    if (data.images && Array.isArray(data.images)) {
+      console.log("API: Обработка изображений из поля images");
+      // Удаляем дубликаты URL изображений
+      const uniqueUrls = Array.from(new Set<string>(data.images));
+      // Фильтруем некорректные URL
+      images = uniqueUrls.filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          console.warn("API: Некорректный URL изображения:", url);
+          return false;
+        }
+      });
+      console.log("API: Обработано изображений:", images.length);
+    } else if (data.gallery && Array.isArray(data.gallery)) {
+      // Для обратной совместимости проверяем поле gallery
+      console.log("API: Обработка изображений из поля gallery");
+      // Удаляем дубликаты URL изображений
+      const uniqueUrls = Array.from(new Set<string>(data.gallery));
+      // Фильтруем некорректные URL
+      images = uniqueUrls.filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          console.warn("API: Некорректный URL изображения:", url);
+          return false;
+        }
+      });
+      console.log("API: Обработано изображений:", images.length);
+    }
+
     // Создаем товар с данными
     const productData = {
-      excursionCard: data.excursionCard || null, // ID экскурсии может быть null
+      excursionCard: data.excursionCard || null,
       title: data.title,
+      images: images, // Используем обработанный массив изображений
       services: data.services || [],
       dateRanges: data.dateRanges,
       startTimes: data.startTimes,
@@ -93,7 +129,7 @@ export async function POST(request: Request) {
       isPublished: data.isPublished || false,
     };
 
-    console.log("Создание товара с данными:", productData);
+    console.log("Создание товара с данными:", JSON.stringify(productData, null, 2));
 
     const product = await ExcursionProduct.create(productData);
     console.log("Товар успешно создан:", product._id);
