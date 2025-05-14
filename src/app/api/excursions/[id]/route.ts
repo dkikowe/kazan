@@ -141,6 +141,11 @@ export async function PUT(request: NextRequest) {
       images: data.card.images || [],
     };
     
+    // Удаляем _id из объекта обновления, если он там есть
+    if (updateData._id) {
+      delete updateData._id;
+    }
+    
     // Обновляем данные экскурсии
     const db = mongoose.connection.db;
     if (!db) {

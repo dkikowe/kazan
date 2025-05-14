@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
 import Tag from "@/models/Tag";
+import FilterItem from "@/models/FilterItem";
+import FilterGroup from "@/models/FilterGroup";
 import mongoose from "mongoose";
 import { nanoid } from 'nanoid';
 import dbConnect from "@/lib/dbConnect";
@@ -11,6 +13,9 @@ import dbConnect from "@/lib/dbConnect";
 export async function GET(request: Request) {
   try {
     await dbConnect();
+    
+    // Инициализируем модели перед запросом
+    mongoose.model('Tag', Tag.schema);
     
     // Получаем параметры запроса
     const { searchParams } = new URL(request.url);
@@ -21,10 +26,13 @@ export async function GET(request: Request) {
     
     // Если указан тег, добавляем его в запрос
     if (tagId) {
-      // Используем $in для поиска tagId в массиве tags
-      // Также можно использовать ObjectId для корректного сравнения
-      const tagObjectId = new mongoose.Types.ObjectId(tagId);
-      query.tags = { $in: [tagObjectId, tagId] };
+      try {
+        const tagObjectId = new mongoose.Types.ObjectId(tagId);
+        query.tags = tagObjectId;
+        console.log(`Фильтрация по тегу ID: ${tagId}`);
+      } catch(err) {
+        console.error("Некорректный ID тега:", err);
+      }
     }
     
     console.log("Запрос экскурсий с фильтром:", JSON.stringify(query));
@@ -32,7 +40,10 @@ export async function GET(request: Request) {
     // Получаем экскурсии с учетом фильтра по тегам
     const excursions = await ExcursionCard.find(query)
       .populate("excursionProduct")
-      .populate("tags") // Добавляем информацию о тегах
+      .populate({
+        path: "tags",
+        model: mongoose.model('Tag')
+      }) // Явно указываем модель
       .sort({ title: 1 });
       
     console.log(`Найдено ${excursions.length} экскурсий`);
