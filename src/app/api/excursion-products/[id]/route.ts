@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
+import dbConnect from "@/lib/dbConnect";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
 import mongoose from "mongoose";
@@ -10,7 +10,6 @@ import FilterGroup from "@/models/FilterGroup";
 // Регистрируем модель Excursion в mongoose
 // @ts-ignore: игнорируем ошибку для этого импорта
 import excursionModel from "../../../models/Excursion";
-import dbConnect from "@/lib/dbConnect";
 
 export async function GET(
   request: Request,
@@ -20,7 +19,7 @@ export async function GET(
   console.log("API: Получен запрос для товара экскурсии с ID:", id);
 
   try {
-    await connectToDatabase();
+    await dbConnect();
     console.log("API: Подключение к базе данных успешно");
 
     const excursionProduct = await ExcursionProduct.findById(id)
@@ -42,13 +41,15 @@ export async function GET(
       ...excursionProduct,
       dateRanges: excursionProduct.dateRanges?.map(range => ({
         ...range,
-        start: range.start?.toISOString(),
-        end: range.end?.toISOString(),
-        excludedDates: range.excludedDates?.map(date => date.toISOString())
+        start: range.start instanceof Date ? range.start.toISOString() : range.start,
+        end: range.end instanceof Date ? range.end.toISOString() : range.end,
+        excludedDates: range.excludedDates?.map(date => 
+          date instanceof Date ? date.toISOString() : date
+        )
       })),
       groups: excursionProduct.groups?.map(group => ({
         ...group,
-        date: group.date?.toISOString()
+        date: group.date instanceof Date ? group.date.toISOString() : group.date
       }))
     };
 
@@ -71,7 +72,7 @@ export async function PUT(
   console.log("API: Получен запрос на обновление товара экскурсии с ID:", id);
 
   try {
-    await connectToDatabase();
+    await dbConnect();
     console.log("API: Подключение к базе данных успешно");
 
     const data = await request.json();
@@ -145,7 +146,7 @@ export async function DELETE(
   console.log("API: Получен запрос на удаление товара экскурсии с ID:", id);
 
   try {
-    await connectToDatabase();
+    await dbConnect();
     console.log("API: Подключение к базе данных успешно");
 
     const deletedProduct = await ExcursionProduct.findByIdAndDelete(id);

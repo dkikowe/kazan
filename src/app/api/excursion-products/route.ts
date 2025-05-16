@@ -1,4 +1,4 @@
-import { connectToDatabase } from "@/lib/mongodb";
+import dbConnect from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
@@ -14,7 +14,7 @@ import excursionModel from "../../models/Excursion";
 // GET /api/excursion-products
 export async function GET(request: Request) {
   try {
-    await connectToDatabase();
+    await dbConnect();
     
     // Получаем параметры запроса
     const { searchParams } = new URL(request.url);
@@ -31,7 +31,12 @@ export async function GET(request: Request) {
         path: 'excursionCard',
         select: 'title',
         model: 'ExcursionCard'
-      });
+      })
+      .lean();
+
+    if (!products) {
+      return NextResponse.json([], { status: 200 });
+    }
 
     console.log(`Найдено ${products.length} товаров экскурсий`);
     return NextResponse.json(products);
@@ -48,7 +53,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     console.log("Начало создания товара экскурсии");
-    await connectToDatabase();
+    await dbConnect();
     const data = await request.json();
     
     console.log("Получены данные для создания товара:", JSON.stringify(data, null, 2));
