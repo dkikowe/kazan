@@ -168,7 +168,7 @@ export default function WhereToGoPage() {
                   ticket.name.toLowerCase().includes("детский")
                 ) {
                   prices.child = `от ${ticket.price} ₽`;
-                } else if (ticket.name.toLowerCase().includes("пенсионер")) {
+                } else if (ticket.name.toLowerCase().includes("пенсионный")) {
                   prices.retired = `от ${ticket.price} ₽`;
                 } else if (ticket.name.toLowerCase().includes("до 7")) {
                   prices.childUnder7 =
@@ -250,12 +250,12 @@ export default function WhereToGoPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
               </div>
             ) : (
-              <ExcursionDetails {...excursionDetails} />
+              <ExcursionDetails {...excursionDetails} excursionId={id} />
             )}
           </div>
         </div>
         <div className="hidden md:flex">
-          <Photos photos={excursionDetails.photos} />
+          <Photos excursionId={id} />
         </div>
         <div className="hidden md:block">
           <KazanKremlinInfo />

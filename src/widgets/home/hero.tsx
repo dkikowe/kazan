@@ -47,7 +47,7 @@ const Hero = () => {
       className={`${
         isMobile ? "min-h-[70vh]" : "h-[80vh]"
       } bg-cover bg-center lg:pt-[1.063rem] w-full`}
-      style={{ backgroundImage: "url(/bg.png)" }}
+      style={{ backgroundImage: "url(/bg.jpg)" }}
     >
       <NavbarDark />
       <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col justify-between py-[4.625rem]">

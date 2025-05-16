@@ -48,7 +48,6 @@ export async function GET() {
     tagItems = tags.map(tag => ({
       _id: tag._id.toString(),
       name: tag.name,
-      slug: tag.slug,
       group: tagGroup._id.toString(),
       sortOrder: tag.sortOrder || 0,
       isActive: true

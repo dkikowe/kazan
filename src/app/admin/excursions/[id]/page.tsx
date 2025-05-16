@@ -252,55 +252,61 @@ export default function EditExcursionPage({ params }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Теги</FormLabel>
-                    <Select
-                      onValueChange={(value: string) => {
-                        const currentTags = field.value || [];
-                        if (!currentTags.includes(value)) {
-                          field.onChange([...currentTags, value]);
-                        }
-                      }}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите теги" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tags.map((tag) => (
-                          <SelectItem
-                            key={tag._id.toString()}
-                            value={tag._id.toString()}
-                          >
-                            {tag.name || ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {field.value?.map((tagId) => {
-                        const tag = tags.find(
-                          (t) => t._id.toString() === tagId
-                        );
-                        return tag ? (
-                          <div
-                            key={tag._id.toString()}
-                            className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
-                          >
-                            <span>{tag.name || ""}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                field.onChange(
-                                  field.value?.filter((id) => id !== tagId)
-                                );
-                              }}
-                              className="text-gray-500 hover:text-gray-700"
+                    <div className="space-y-4">
+                      <Select
+                        onValueChange={(value: string) => {
+                          const currentTags = field.value || [];
+                          if (!currentTags.includes(value)) {
+                            field.onChange([...currentTags, value]);
+                          }
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите теги" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {tags.map((tag) => (
+                            <SelectItem
+                              key={tag._id.toString()}
+                              value={tag._id.toString()}
                             >
-                              ×
-                            </button>
-                          </div>
-                        ) : null;
-                      })}
+                              {tag.name || ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <div className="flex flex-wrap gap-2">
+                        {field.value?.map((tagId) => {
+                          const tag = tags.find(
+                            (t) => t._id.toString() === tagId
+                          );
+                          if (!tag) return null;
+
+                          return (
+                            <div
+                              key={tagId}
+                              className="flex items-center gap-2 bg-muted px-3 py-1 rounded-full"
+                            >
+                              <span>{tag.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newTags = field.value?.filter(
+                                    (id) => id !== tagId
+                                  );
+                                  field.onChange(newTags);
+                                }}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                     <FormMessage />
                   </FormItem>

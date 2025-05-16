@@ -1,20 +1,27 @@
-// src/features/hero/ui/category-button.tsx
+// src/features/category/ui/category-button.tsx
+
+"use client";
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Props {
   id: string;
   label: string;
-  active?: boolean;
-  onClick?: () => void;
+  active: boolean;
+  onClick: () => void;
 }
 
-const CategoryButton = ({ label, active, onClick }: Props) => {
+const CategoryButton = ({ id, label, active, onClick }: Props) => {
   return (
     <Button
       variant={active ? "default" : "glass"}
-      className="rounded-full md:h-[45px] px-[1.125rem] border border-[#858D96] py-[0.875rem] text-[0.938rem] leading-[112%] transition-colors duration-200 hover:bg-primary "
+      className={cn(
+        "rounded-full h-[43px] px-[1.25rem] text-[0.938rem] font-medium",
+        active && "bg-primary text-primary-foreground hover:bg-primary/90",
+        !active && "bg-white/10 text-white hover:bg-white/20"
+      )}
       onClick={onClick}
     >
       {label}

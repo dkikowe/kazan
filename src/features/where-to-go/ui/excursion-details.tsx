@@ -19,7 +19,7 @@ interface ExcursionDetailsProps {
     retired: string;
     childUnder7: string;
   };
-  photos: string[];
+  excursionId: string;
 }
 
 export default function ExcursionDetails({
@@ -29,7 +29,7 @@ export default function ExcursionDetails({
   location,
   rating,
   prices,
-  photos,
+  excursionId,
 }: ExcursionDetailsProps) {
   const isMobile = useIsMobile();
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -117,7 +117,7 @@ export default function ExcursionDetails({
             </div>
           </div>
 
-          {isMobile && <Photos photos={photos} />}
+          {isMobile && <Photos excursionId={excursionId} />}
 
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1 hover:bg-[#F8F9FA] rounded-[15px]  p-2 transition-colors">

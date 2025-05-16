@@ -100,17 +100,18 @@ const FilterSection = () => {
           return false;
         }
 
-        // После populate теги могут быть объектами с _id или строками с ID
-        return excursion.tags.some(
-          (tag) =>
-            // Если тег - это объект с _id
-            (tag &&
-              typeof tag === "object" &&
-              "_id" in tag &&
-              (tag._id === tagId || tag._id.toString() === tagId)) ||
-            // Если тег - это строка
-            (typeof tag === "string" && tag === tagId)
-        );
+        // Проверяем каждый тег
+        return excursion.tags.some((tag) => {
+          // Если тег - это объект с _id
+          if (tag && typeof tag === "object" && "_id" in tag) {
+            return tag._id.toString() === tagId;
+          }
+          // Если тег - это строка
+          if (typeof tag === "string") {
+            return tag === tagId;
+          }
+          return false;
+        });
       });
 
       console.log(
@@ -118,6 +119,7 @@ const FilterSection = () => {
       );
       setFilteredExcursions(filtered);
     } else {
+      // Если нет фильтра по тегу, показываем все экскурсии
       setFilteredExcursions(excursions);
     }
   }, [excursions, tagId]);

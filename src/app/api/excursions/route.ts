@@ -2,7 +2,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
-import Tag from "@/models/Tag";
+import Tag, { ITag } from "@/models/Tag";
 import FilterItem from "@/models/FilterItem";
 import FilterGroup from "@/models/FilterGroup";
 import mongoose from "mongoose";
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       .populate({
         path: "tags",
         model: mongoose.model('Tag')
-      }) // Явно указываем модель
+      })
       .sort({ title: 1 });
       
     console.log(`Найдено ${excursions.length} экскурсий`);

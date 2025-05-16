@@ -9,8 +9,12 @@ import { ArrowUpRight } from "lucide-react";
 import { ITag } from "@/models/Tag";
 import { useEffect, useState } from "react";
 
+interface TagWithId extends ITag {
+  _id: string;
+}
+
 const Hero = () => {
-  const [tags, setTags] = useState<ITag[]>([]);
+  const [tags, setTags] = useState<TagWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,14 +38,14 @@ const Hero = () => {
   }, []);
 
   const categories = tags.map((tag) => ({
-    id: tag.slug,
+    id: tag._id.toString(),
     label: tag.name,
   }));
 
   return (
     <section
       className="h-[45vh]  lg:h-[70vh] bg-cover bg-center lg:pt-[1.063rem]"
-      style={{ backgroundImage: "url(/bg_catalog.png)" }}
+      style={{ backgroundImage: "url(/bg_catalog.webp)" }}
     >
       <NavbarDark />
       <div className="max-w-[1440px] p-[20px] mx-auto h-full flex flex-col justify-between py-[4.625rem]">

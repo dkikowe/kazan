@@ -91,9 +91,9 @@ export const CatalogAside = ({ initialFilters }: CatalogAsideProps) => {
     if (selectedFilters["Теги"] && selectedFilters["Теги"].length > 0) {
       const tagId = selectedFilters["Теги"][0];
       console.log("Применение фильтра по тегу:", tagId);
-      params.set("tag", tagId); // Поддерживаем пока только один тег
+      params.set("tag", tagId);
     } else {
-      console.log("Нет выбранных тегов для фильтрации");
+      params.delete("tag"); // Удаляем параметр тега, если нет выбранных тегов
     }
 
     // Выводим информацию о выбранных фильтрах
@@ -281,9 +281,9 @@ export const CatalogAsideMobile = ({ initialFilters }: CatalogAsideProps) => {
     if (selectedFilters["Теги"] && selectedFilters["Теги"].length > 0) {
       const tagId = selectedFilters["Теги"][0];
       console.log("Применение фильтра по тегу:", tagId);
-      params.set("tag", tagId); // Поддерживаем пока только один тег
+      params.set("tag", tagId);
     } else {
-      console.log("Нет выбранных тегов для фильтрации");
+      params.delete("tag"); // Удаляем параметр тега, если нет выбранных тегов
     }
 
     // Выводим информацию о выбранных фильтрах
