@@ -5,8 +5,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 import CatalogMoreCard from "./card";
 
@@ -142,8 +140,6 @@ const CatalogMoreCarousel = () => {
           );
         })}
       </CarouselContent>
-      <CarouselPrevious className="hidden md:flex" />
-      <CarouselNext className="hidden md:flex" />
     </Carousel>
   );
 };
