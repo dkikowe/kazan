@@ -1,19 +1,13 @@
 import { NextResponse } from 'next/server';
-import mongoose from 'mongoose';
+import dbConnect from '@/lib/dbConnect';
 import FilterGroup from '@/models/FilterGroup';
 import FilterItem from '@/models/FilterItem';
 import { FilterGroup as FilterGroupType } from '@/features/catalog/api/types';
 import Tag from '@/models/Tag';
 
-// Подключение к MongoDB
-const connectDB = async () => {
-  if (mongoose.connections[0].readyState) return;
-  await mongoose.connect('mongodb+srv://dkikowe:dkikowe@project.0g2vn.mongodb.net/vostokargo');
-};
-
 export async function GET() {
   try {
-    await connectDB();
+    await dbConnect();
     console.log("API: Получение фильтров - начало");
 
     // Получаем группы фильтров
