@@ -4,6 +4,7 @@ import Booking from "@/models/Booking";
 import mongoose from "mongoose";
 import ExcursionCard from "@/models/ExcursionCard";
 import ExcursionProduct from "@/models/ExcursionProduct";
+import nodemailer from "nodemailer";
 
 // Интерфейс для данных заявки
 interface BookingData {
@@ -18,7 +19,8 @@ interface BookingData {
   tickets?: Array<{type: string; count: number}>;
   ticketType?: string;
   ticketCount?: number;
-  [key: string]: any; // Разрешить дополнительные поля
+  promoCode?: string;
+  [key: string]: any;
 }
 
 // Интерфейс для типизации результата запроса экскурсии
@@ -32,21 +34,30 @@ interface ExcursionCardInfo {
   [key: string]: any;
 }
 
+// Создаем транспорт для отправки email
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+
 export async function GET(request: Request) {
   try {
     await connectToDatabase();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
 
-    const query = status && status !== "all" ? { status } : {};
-    mongoose.set('strictPopulate', false);
-    
+    let query = {};
+    if (status && status !== "all") {
+      query = { status };
+    }
+
     const bookings = await Booking.find(query)
-      .populate({
-        path: 'excursionId',
-        select: 'title',
-        model: 'ExcursionCard'
-      })
+      .populate("excursionId", "title")
       .sort({ createdAt: -1 });
 
     return NextResponse.json(bookings);
@@ -97,6 +108,10 @@ export async function POST(request: Request) {
       bookingData.comment = data.comment;
     }
 
+    if (data.promoCode) {
+      bookingData.promoCode = data.promoCode;
+    }
+
     // Обрабатываем билеты
     if (Array.isArray(data.tickets) && data.tickets.length > 0) {
       bookingData.tickets = data.tickets;
@@ -116,64 +131,30 @@ export async function POST(request: Request) {
       Телефон: ${data.phone}
     `;
 
-    // Получаем информацию об экскурсии, если есть
-    if (data.excursionId) {
-      try {
-        const excursion = await ExcursionCard.findById(data.excursionId).lean();
-        if (excursion && typeof excursion === 'object') {
-          // Используем any для обхода проблем с типизацией mongoose
-          const excursionAny = excursion as any;
-          emailBody += `\nЭкскурсия: ${excursionAny.title || 'Экскурсия ' + data.excursionId}\n`;
-        }
-      } catch (err) {
-        console.warn("Не удалось получить данные экскурсии:", err);
-      }
-    }
-
-    // Добавляем информацию о билетах в письмо
-    if (Array.isArray(data.tickets) && data.tickets.length > 0) {
+    // Добавляем информацию о билетах
+    if (data.tickets && data.tickets.length > 0) {
       emailBody += "\nБилеты:\n";
-      data.tickets.forEach((ticket: {type: string; count: number}) => {
-        const ticketType = 
-          ticket.type === 'adult' ? 'Взрослый' : 
-          ticket.type === 'child' ? 'Детский' : 
-          ticket.type === 'pensioner' ? 'Пенсионный' : ticket.type;
+      data.tickets.forEach((ticket: any) => {
+        const ticketType = ticket.type === "adult" ? "Взрослый" :
+                         ticket.type === "child" ? "Детский" :
+                         ticket.type === "pensioner" ? "Пенсионный" :
+                         ticket.type === "childUnder7" ? "Детский до 7 лет" : ticket.type;
         emailBody += `${ticketType}: ${ticket.count} шт.\n`;
       });
-    } else if (data.ticketType) {
-      const ticketType = 
-        data.ticketType === 'adult' ? 'Взрослый' : 
-        data.ticketType === 'child' ? 'Детский' : 
-        data.ticketType === 'pensioner' ? 'Пенсионный' : data.ticketType;
-      emailBody += `\nБилет: ${ticketType}, ${data.ticketCount || 1} шт.\n`;
     }
 
     // Добавляем остальные данные
     emailBody += `
-      Тип оплаты: ${data.paymentType === 'full' ? 'Полная оплата' : 
-                    data.paymentType === 'prepayment' ? 'Предоплата' : 
-                    data.paymentType === 'onsite' ? 'На месте' : data.paymentType || 'Не указан'}
-      Дата: ${data.date || 'Не указана'}
       Время: ${data.time || 'Не указано'}
-      Комментарий: ${data.comment || 'Нет комментария'}
+      Промокод: ${data.promoCode || 'Не указан'}
     `;
 
-    // Пытаемся отправить уведомление на email
+    // Отправляем уведомление на email
     try {
-      const nodemailer = await import('nodemailer');
-      
-      const transporter = nodemailer.default.createTransport({
-        service: "gmail",
-        auth: {
-          user: "dkikowe@gmail.com",
-          pass: "ewqheweyshubgrth"
-        },
-      });
-
       await transporter.sendMail({
-        from: '"Сайт" <dkikowe@gmail.com>',
-        to: "kzn.land@yandex.ru",
-        subject: "Новая заявка с сайта",
+        from: process.env.EMAIL_USER,
+        to: process.env.ADMIN_EMAIL,
+        subject: "Новая заявка на бронирование",
         text: emailBody,
       });
     } catch (emailError) {

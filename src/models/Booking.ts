@@ -5,7 +5,7 @@ export interface IBooking {
   fullName: string;
   phone: string;
   tickets?: Array<{
-    type: "adult" | "child" | "pensioner";
+    type: "adult" | "child" | "pensioner" | "childUnder7" | "additional";
     count: number;
   }>;
   ticketType?: "adult" | "child" | "pensioner";
@@ -15,7 +15,8 @@ export interface IBooking {
   date?: string;
   time?: string;
   comment?: string;
-  status: "new" | "processed" | "archived" | "deleted";
+  promoCode?: string;
+  status: "new" | "processed" | "archived" | "deleted" | "pending" | "confirmed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,7 +24,7 @@ export interface IBooking {
 const TicketSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["adult", "child", "pensioner"],
+    enum: ["adult", "child", "pensioner", "childUnder7", "additional"],
     required: true
   },
   count: {
@@ -87,9 +88,13 @@ const BookingSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    promoCode: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
-      enum: ["new", "processed", "archived", "deleted"],
+      enum: ["new", "processed", "archived", "deleted", "pending", "confirmed", "cancelled"],
       default: "new",
     },
   },

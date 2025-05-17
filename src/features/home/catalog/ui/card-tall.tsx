@@ -11,13 +11,29 @@ const CardTall = ({
   subtitle,
   rating,
   imageUrl,
+  duration,
+  addressMeeting,
 }: {
   id: string;
   title: string;
   subtitle: string;
   rating: number;
   imageUrl: string;
+  duration?: {
+    hours: number;
+    minutes: number;
+  };
+  addressMeeting?: string;
 }) => {
+  const formatDuration = () => {
+    if (!duration) return "";
+    const hours = duration.hours;
+    const minutes = duration.minutes;
+    if (hours === 0) return `${minutes} мин`;
+    if (minutes === 0) return `${hours} ч`;
+    return `${hours} ч ${minutes} мин`;
+  };
+
   return (
     <div
       className="aspect-[4/5] w-full rounded-3xl overflow-hidden bg-cover bg-center"
@@ -45,6 +61,23 @@ const CardTall = ({
             <p className="font-semibold text-[1.125rem] tracking-[-2%]">
               {subtitle}
             </p>
+            {duration && (
+              <p className="font-medium text-[1rem] tracking-[-2%]">
+                {formatDuration()}
+              </p>
+            )}
+            {addressMeeting && (
+              <p className="font-medium text-[1rem] tracking-[-2%] flex items-center gap-2">
+                <Image
+                  src={"/icons/location.svg"}
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="object-cover"
+                />
+                {addressMeeting}
+              </p>
+            )}
           </div>
           <div className="p-0">
             <Button

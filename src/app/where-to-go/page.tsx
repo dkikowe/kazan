@@ -69,8 +69,11 @@ const defaultExcursionDetails = {
   title: "Экскурсии по Казанскому кремлю",
   description:
     "Кремль Казани относится к старинным памятникам зодчества, с 2000-го года отнесен к наследию ЮНЕСКО. Известное сооружение хранит истории о временах, когда на территории края жили булгарские племена, правили золотоордынские наместники и ставленники Ивана Грозного. Профессиональный гид агентства, сопровождающий туристов в поездке, расскажет гостям необычную историю казанского Кремля. Путешественники узнают легенду о царице Сююмбике, смогут увидеть стены и внутренние застройки музея-заповедника.",
-  duration: "2 часа 15 минут",
-  location: "ул.Баумана, 29",
+  duration: {
+    hours: 2,
+    minutes: 15,
+  },
+  addressMeeting: "ул.Баумана, 29",
   rating: "4.9/5",
   photos: [
     "/images/catalog-filter/catalog1.png",
@@ -85,6 +88,7 @@ const defaultExcursionDetails = {
     retired: "от 1500 ₽",
     childUnder7: "Бесплатно",
   },
+  excursionId: DEFAULT_EXCURSION_ID,
 };
 
 export default function WhereToGo() {
@@ -255,7 +259,7 @@ export default function WhereToGo() {
           </div>
         </div>
         <div className="hidden md:flex">
-          <Photos photos={excursionDetails.photos} />
+          <Photos excursionId={excursion?._id || DEFAULT_EXCURSION_ID} />
         </div>
         <div className="hidden md:block">
           <KazanKremlinInfo />
@@ -286,10 +290,7 @@ export default function WhereToGo() {
         <span className="font-semibold px-4 text-[28px] md:text-[37px] leading-[100%] tracking-[-0.03em] text-[#12213a] font-manrope text-center md:text-left">
           Бронирование экскурсии
         </span>
-        <div className="flex flex-col lg:flex-row gap-[20px] md:gap-[30px] mt-[20px] md:mt-[40px]">
-          <WhereToGoo />
-          <BookingForm />
-        </div>
+        <div className="flex flex-col lg:flex-row gap-[20px] md:gap-[30px] mt-[20px] md:mt-[40px]"></div>
         <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem] ">
           <div>
             <h2 className="font-semibold mt-[50px] leading-[106%] tracking-[-4%] text-[1.75rem] px-4 lg:mt-[50px] lg:text-[3.375rem] max-w-[60rem] text-left md:text-left">

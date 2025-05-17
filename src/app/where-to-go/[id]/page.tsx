@@ -44,6 +44,11 @@ interface Excursion {
     _id: string;
     title: string;
   };
+  duration?: {
+    hours: number;
+    minutes: number;
+  };
+  addressMeeting?: string;
 }
 
 const guides = [
@@ -66,8 +71,11 @@ const defaultExcursionDetails = {
   title: "Экскурсии по Казанскому кремлю",
   description:
     "Кремль Казани относится к старинным памятникам зодчества, с 2000-го года отнесен к наследию ЮНЕСКО. Известное сооружение хранит истории о временах, когда на территории края жили булгарские племена, правили золотоордынские наместники и ставленники Ивана Грозного. Профессиональный гид агентства, сопровождающий туристов в поездке, расскажет гостям необычную историю казанского Кремля. Путешественники узнают легенду о царице Сююмбике, смогут увидеть стены и внутренние застройки музея-заповедника.",
-  duration: "2 часа 15 минут",
-  location: "ул.Баумана, 29",
+  duration: {
+    hours: 2,
+    minutes: 15,
+  },
+  addressMeeting: "ул.Баумана, 29",
   rating: "4.9/5",
   photos: [
     "/images/catalog-filter/catalog1.png",
@@ -96,6 +104,10 @@ export default function WhereToGoPage() {
   const [excursionDetails, setExcursionDetails] = useState(
     defaultExcursionDetails
   );
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedTickets, setSelectedTickets] = useState<{
+    [key: string]: number;
+  }>({});
 
   useEffect(() => {
     const fetchExcursionData = async () => {
@@ -125,6 +137,11 @@ export default function WhereToGoPage() {
           description:
             excursionData.card.description ||
             defaultExcursionDetails.description,
+          duration:
+            excursionData.card.duration || defaultExcursionDetails.duration,
+          addressMeeting:
+            excursionData.card.addressMeeting ||
+            defaultExcursionDetails.addressMeeting,
           photos:
             excursionData.card.images && excursionData.card.images.length > 0
               ? excursionData.card.images
@@ -249,8 +266,18 @@ export default function WhereToGoPage() {
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
               </div>
+            ) : error ? (
+              <div className="text-red-500 text-center">{error}</div>
             ) : (
-              <ExcursionDetails {...excursionDetails} excursionId={id} />
+              <ExcursionDetails
+                title={excursionDetails.title}
+                description={excursionDetails.description}
+                duration={excursionDetails.duration}
+                addressMeeting={excursionDetails.addressMeeting}
+                rating={excursionDetails.rating}
+                prices={excursionDetails.prices}
+                excursionId={id}
+              />
             )}
           </div>
         </div>
@@ -287,8 +314,16 @@ export default function WhereToGoPage() {
           Бронирование экскурсии
         </span>
         <div className="flex flex-col lg:flex-row gap-[20px] md:gap-[30px] mt-[20px] md:mt-[40px]">
-          <WhereToGoo />
-          <BookingForm />
+          <WhereToGoo
+            excursionId={id}
+            onTimeSelect={setSelectedTime}
+            onTicketsChange={setSelectedTickets}
+          />
+          <BookingForm
+            excursionId={id}
+            selectedTime={selectedTime || undefined}
+            tickets={selectedTickets}
+          />
         </div>
         <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem] ">
           <div>

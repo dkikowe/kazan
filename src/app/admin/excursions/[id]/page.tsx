@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Resolver, SubmitHandler } from "react-hook-form";
+import { useForm, type SubmitHandler, Resolver } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -55,7 +55,7 @@ export default function EditExcursionPage({ params }: Props) {
   >([]);
 
   const form = useForm<ExcursionFormData>({
-    resolver: zodResolver(excursionFormSchema),
+    resolver: zodResolver(excursionFormSchema) as Resolver<ExcursionFormData>,
     defaultValues: {
       card: {
         title: "",
@@ -63,28 +63,21 @@ export default function EditExcursionPage({ params }: Props) {
         description: "",
         images: [],
         videoUrl: "",
-        whatYouWillSee: {
-          title: "",
-          items: [],
-        },
         reviews: [],
         attractions: [],
         tags: [],
         filterItems: [],
         isPublished: false,
         commercialSlug: "",
-        excursionProduct: "",
-      },
-      commercial: {
-        schedule: [],
-        meetingPoint: {
-          name: "",
-          address: "",
-        },
+        excursionProduct: null,
+        placeMeeting: "",
+        addressMeeting: "",
         duration: {
           hours: 0,
           minutes: 0,
         },
+      },
+      commercial: {
         prices: [],
         additionalServices: [],
         promoCodes: [],
@@ -157,20 +150,47 @@ export default function EditExcursionPage({ params }: Props) {
   async function onSubmit(values: ExcursionFormData) {
     try {
       setSaving(true);
+
+      const formData = {
+        card: {
+          ...values.card,
+          placeMeeting: values.card.placeMeeting,
+          addressMeeting: values.card.addressMeeting,
+          duration: {
+            hours: Number(values.card.duration.hours) || 0,
+            minutes: Number(values.card.duration.minutes) || 0,
+          },
+          reviews: values.card.reviews || [],
+          attractions: values.card.attractions || [],
+          tags: values.card.tags || [],
+          filterItems: values.card.filterItems || [],
+          isPublished: values.card.isPublished || false,
+        },
+        commercial: values.commercial,
+      };
+
       const response = await fetch(`/api/excursions/${excursionId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to update excursion");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update excursion");
+      }
 
       toast.success("Экскурсия успешно обновлена");
       router.push("/admin/excursions");
     } catch (error) {
-      toast.error("Ошибка при обновлении экскурсии");
+      console.error("Ошибка при обновлении экскурсии:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Ошибка при обновлении экскурсии"
+      );
     } finally {
       setSaving(false);
     }
@@ -245,6 +265,79 @@ export default function EditExcursionPage({ params }: Props) {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="card.placeMeeting"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Место встречи</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="card.addressMeeting"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Адрес встречи</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="card.duration.hours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Часы</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="card.duration.minutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Минуты</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -383,8 +476,20 @@ export default function EditExcursionPage({ params }: Props) {
                   <FormItem>
                     <FormLabel>Товар экскурсии</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      onValueChange={(value) => {
+                        const product = excursionProducts.find(
+                          (p) => p._id === value
+                        );
+                        if (product) {
+                          field.onChange({
+                            _id: product._id,
+                            title: product.title,
+                          });
+                        } else {
+                          field.onChange(null);
+                        }
+                      }}
+                      value={field.value?._id || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -429,78 +534,7 @@ export default function EditExcursionPage({ params }: Props) {
               <CardTitle>Коммерческая информация</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="commercial.meetingPoint.name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Название места встречи</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="commercial.meetingPoint.address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Адрес места встречи</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="commercial.duration.hours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Часы</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="commercial.duration.minutes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Минуты</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="59"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Здесь будут поля для цен, дополнительных услуг и промокодов */}
             </CardContent>
           </Card>
 

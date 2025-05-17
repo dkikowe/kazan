@@ -3,7 +3,22 @@
 import React, { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const WhereToGoo: React.FC = () => {
+interface WhereToGooProps {
+  excursionId?: string;
+  onTicketsChange?: (tickets: {
+    adult: number;
+    child: number;
+    pensioner: number;
+    childUnder7: number;
+  }) => void;
+  onTimeSelect?: (time: string) => void;
+}
+
+export default function WhereToGoo({
+  excursionId,
+  onTicketsChange,
+  onTimeSelect,
+}: WhereToGooProps) {
   const isMobile = useIsMobile();
   const [adultTickets, setAdultTickets] = useState(0);
   const [childTickets, setChildTickets] = useState(0);
@@ -31,21 +46,8 @@ const WhereToGoo: React.FC = () => {
       {/* Заголовок */}
       <div className="w-full h-[60px] bg-[#3171F7] flex items-center justify-center">
         <span className="text-white text-[18px] leading-[22px] font-medium">
-          Куда сходить в Казани?
+          Выберите билеты
         </span>
-      </div>
-
-      {/* Кнопки выбора времени */}
-      <div className="flex flex-wrap gap-[10px] p-[15px]">
-        <button className="h-[40px] px-[20px] bg-[#F3F4F6] rounded-[10px] text-[#161819] text-[14px] leading-[21px]">
-          Сегодня
-        </button>
-        <button className="h-[40px] px-[20px] bg-[#F3F4F6] rounded-[10px] text-[#161819] text-[14px] leading-[21px]">
-          Завтра
-        </button>
-        <button className="h-[40px] px-[20px] bg-[#F3F4F6] rounded-[10px] text-[#161819] text-[14px] leading-[21px]">
-          Послезавтра
-        </button>
       </div>
 
       {/* Счетчики билетов */}
@@ -175,6 +177,4 @@ const WhereToGoo: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default WhereToGoo;
+}

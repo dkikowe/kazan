@@ -4,32 +4,32 @@ import { IFilterItem } from './FilterItem';
 
 export interface IExcursionCard extends Document {
   title: string;
-  seoTitle: string;
-  description: string;
+  seoTitle?: string;
+  description?: string;
   images: string[];
   videoUrl?: string;
-  whatYouWillSee: {
-    title: string;
-    items: string[];
-  };
   reviews: Array<{
-    date: string;
     author: string;
     text: string;
     rating: number;
   }>;
   attractions: string[];
-  tags: ITag[];
-  filterItems: IFilterItem[];
+  tags: mongoose.Types.ObjectId[];
+  filterItems: mongoose.Types.ObjectId[];
   isPublished: boolean;
   commercialSlug: string;
-  excursionProduct: {
-    _id: string;
-    title: string;
+  excursionProduct?: mongoose.Types.ObjectId;
+  placeMeeting: string;
+  addressMeeting: string;
+  duration: {
+    hours: number;
+    minutes: number;
   };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const ExcursionCardSchema = new Schema({
+const ExcursionCardSchema = new Schema<IExcursionCard>({
   title: {
     type: String,
     required: [true, 'Название обязательно'],
@@ -63,22 +63,18 @@ const ExcursionCardSchema = new Schema({
   videoUrl: {
     type: String,
   },
-  whatYouWillSee: {
-    title: {
-      type: String,
-      required: false,
-    },
-    items: [{
-      type: String,
-      required: false,
-    }],
-  },
   reviews: [{
-    date: String,
-    author: String,
-    text: String,
+    author: {
+      type: String,
+      required: true,
+    },
+    text: {
+      type: String,
+      required: true,
+    },
     rating: {
       type: Number,
+      required: true,
       min: 1,
       max: 5,
     },
@@ -100,22 +96,48 @@ const ExcursionCardSchema = new Schema({
   },
   commercialSlug: {
     type: String,
-    required: false,
+    required: true,
     unique: true,
   },
   excursionProduct: {
-    _id: {
-      type: String,
-      required: false,
+    type: Schema.Types.ObjectId,
+    ref: 'ExcursionProduct',
+  },
+  placeMeeting: {
+    type: String,
+    required: [true, 'Место встречи обязательно'],
+    trim: true,
+  },
+  addressMeeting: {
+    type: String,
+    required: [true, 'Адрес встречи обязателен'],
+    trim: true,
+  },
+  duration: {
+    type: {
+      hours: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      minutes: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 59,
+      },
     },
-    title: {
-      type: String,
-      required: false,
-    },
+    required: true,
   },
 }, {
   timestamps: true,
+  strict: true,
 });
 
-const ExcursionCard = mongoose.models.ExcursionCard || mongoose.model<IExcursionCard>('ExcursionCard', ExcursionCardSchema);
+// Удаляем старую модель, если она существует
+if (mongoose.models.ExcursionCard) {
+  delete mongoose.models.ExcursionCard;
+}
+
+const ExcursionCard = mongoose.model<IExcursionCard>('ExcursionCard', ExcursionCardSchema);
 export default ExcursionCard; 

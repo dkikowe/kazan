@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -29,7 +29,7 @@ import { excursionFormSchema, type ExcursionFormData } from "@/types/excursion";
 import { ITag } from "@/models/Tag";
 import { IFilterItem } from "@/models/FilterItem";
 import { Types } from "mongoose";
-import { Resolver } from "react-hook-form";
+import { ArrowLeft } from "lucide-react";
 
 interface ExcursionProduct {
   _id: string;
@@ -56,32 +56,27 @@ export default function NewExcursionPage() {
         description: "",
         images: [],
         videoUrl: "",
-        whatYouWillSee: {
-          title: "",
-          items: [""],
-        },
         reviews: [],
         attractions: [],
         tags: [],
         filterItems: [],
         isPublished: false,
         commercialSlug: "",
-      },
-      commercial: {
-        schedule: [],
-        meetingPoint: {
-          name: "",
-          address: "",
-        },
+        excursionProduct: null,
+        placeMeeting: "",
+        addressMeeting: "",
         duration: {
           hours: 0,
           minutes: 0,
         },
+      },
+      commercial: {
         prices: [],
         additionalServices: [],
         promoCodes: [],
       },
     },
+    mode: "onChange",
   });
 
   useEffect(() => {
@@ -126,34 +121,45 @@ export default function NewExcursionPage() {
   async function onSubmit(values: ExcursionFormData) {
     try {
       setSaving(true);
+      console.log("Начало отправки формы:", values);
 
-      // Проверяем обязательные поля
       if (!values.card.title) {
         throw new Error("Название экскурсии обязательно");
+      }
+      if (!values.card.placeMeeting) {
+        throw new Error("Место встречи обязательно");
+      }
+      if (!values.card.addressMeeting) {
+        throw new Error("Адрес встречи обязателен");
       }
 
       const formData = {
         card: {
-          ...values.card,
-          whatYouWillSee: values.card.whatYouWillSee || {
-            title: "",
-            items: [""],
-          },
+          title: values.card.title,
+          seoTitle: values.card.seoTitle || "",
+          description: values.card.description || "",
+          images: values.card.images || [],
+          videoUrl: values.card.videoUrl || "",
           reviews: values.card.reviews || [],
           attractions: values.card.attractions || [],
           tags: values.card.tags || [],
           filterItems: values.card.filterItems || [],
           isPublished: values.card.isPublished || false,
+          placeMeeting: values.card.placeMeeting,
+          addressMeeting: values.card.addressMeeting,
+          duration: {
+            hours: Number(values.card.duration?.hours) || 0,
+            minutes: Number(values.card.duration?.minutes) || 0,
+          },
+          excursionProduct: values.card.excursionProduct?._id || null,
         },
-        commercial: values.commercial || {
-          schedule: [],
-          meetingPoint: { name: "", address: "" },
-          duration: { hours: 0, minutes: 0 },
-          prices: [],
-          additionalServices: [],
-          promoCodes: [],
-        },
+        commercial: values.commercial,
       };
+
+      console.log(
+        "Подготовленные данные для отправки:",
+        JSON.stringify(formData, null, 2)
+      );
 
       const response = await fetch("/api/excursions", {
         method: "POST",
@@ -163,10 +169,16 @@ export default function NewExcursionPage() {
         body: JSON.stringify(formData),
       });
 
+      console.log("Получен ответ от сервера:", response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Ошибка от сервера:", errorData);
         throw new Error(errorData.error || "Ошибка при создании экскурсии");
       }
+
+      const result = await response.json();
+      console.log("Успешный ответ от сервера:", result);
 
       toast.success("Экскурсия успешно создана");
       router.push("/admin/excursions");
@@ -181,11 +193,27 @@ export default function NewExcursionPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Создание новой экскурсии</h1>
+    <div className="container mx-auto py-10">
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="outline"
+          onClick={() => router.push("/admin/excursions")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Назад
+        </Button>
+        <h1 className="text-2xl font-bold">Создание новой экскурсии</h1>
+      </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            console.log("Форма отправлена");
+            form.handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-8"
+        >
           <Card>
             <CardHeader>
               <CardTitle>Основная информация</CardTitle>
@@ -196,7 +224,7 @@ export default function NewExcursionPage() {
                 name="card.title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Название</FormLabel>
+                    <FormLabel>Название экскурсии *</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -235,59 +263,138 @@ export default function NewExcursionPage() {
 
               <FormField
                 control={form.control}
+                name="card.placeMeeting"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Место встречи *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="card.addressMeeting"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Адрес встречи *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="card.duration.hours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Часы *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="card.duration.minutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Минуты *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
                 name="card.tags"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Теги</FormLabel>
-                    <Select
-                      onValueChange={(value: string) => {
-                        const currentTags = field.value || [];
-                        if (!currentTags.includes(value)) {
-                          field.onChange([...currentTags, value]);
-                        }
-                      }}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите теги" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tags.map((tag) => (
-                          <SelectItem
-                            key={tag._id.toString()}
-                            value={tag._id.toString()}
-                          >
-                            {tag.name || ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {field.value?.map((tagId) => {
-                        const tag = tags.find(
-                          (t) => t._id.toString() === tagId
-                        );
-                        return tag ? (
-                          <div
-                            key={tag._id.toString()}
-                            className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
-                          >
-                            <span>{tag.name || ""}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                field.onChange(
-                                  field.value?.filter((id) => id !== tagId)
-                                );
-                              }}
-                              className="text-gray-500 hover:text-gray-700"
+                    <div className="space-y-4">
+                      <Select
+                        onValueChange={(value: string) => {
+                          const currentTags = field.value || [];
+                          if (!currentTags.includes(value)) {
+                            field.onChange([...currentTags, value]);
+                          }
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите теги" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {tags.map((tag) => (
+                            <SelectItem
+                              key={tag._id.toString()}
+                              value={tag._id.toString()}
                             >
-                              ×
-                            </button>
-                          </div>
-                        ) : null;
-                      })}
+                              {tag.name || ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <div className="flex flex-wrap gap-2">
+                        {field.value?.map((tagId) => {
+                          const tag = tags.find(
+                            (t) => t._id.toString() === tagId
+                          );
+                          if (!tag) return null;
+
+                          return (
+                            <div
+                              key={tagId}
+                              className="flex items-center gap-2 bg-muted px-3 py-1 rounded-full"
+                            >
+                              <span>{tag.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newTags = field.value?.filter(
+                                    (id) => id !== tagId
+                                  );
+                                  field.onChange(newTags);
+                                }}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -364,8 +471,20 @@ export default function NewExcursionPage() {
                   <FormItem>
                     <FormLabel>Товар экскурсии</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      onValueChange={(value) => {
+                        const product = excursionProducts.find(
+                          (p) => p._id === value
+                        );
+                        if (product) {
+                          field.onChange({
+                            _id: product._id,
+                            title: product.title,
+                          });
+                        } else {
+                          field.onChange(null);
+                        }
+                      }}
+                      value={field.value?._id || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -402,22 +521,6 @@ export default function NewExcursionPage() {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="card.commercialSlug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Коммерческий идентификатор (необязательно)
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
@@ -425,79 +528,8 @@ export default function NewExcursionPage() {
             <CardHeader>
               <CardTitle>Коммерческая информация</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="commercial.meetingPoint.name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Название места встречи</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="commercial.meetingPoint.address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Адрес места встречи</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="commercial.duration.hours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Часы</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="commercial.duration.minutes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Минуты</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={59}
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <CardContent>
+              {/* Здесь будут поля для цен, дополнительных услуг и промокодов */}
             </CardContent>
           </Card>
 
@@ -510,7 +542,7 @@ export default function NewExcursionPage() {
               Отмена
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Сохранение..." : "Создать экскурсию"}
+              {saving ? "Сохранение..." : "Сохранить"}
             </Button>
           </div>
         </form>

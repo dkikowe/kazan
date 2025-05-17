@@ -10,8 +10,11 @@ import Photos from "./photos";
 interface ExcursionDetailsProps {
   title: string;
   description: string;
-  duration: string;
-  location: string;
+  duration: {
+    hours: number;
+    minutes: number;
+  };
+  addressMeeting: string;
   rating: string;
   prices: {
     adult: string;
@@ -26,7 +29,7 @@ export default function ExcursionDetails({
   title,
   description,
   duration,
-  location,
+  addressMeeting,
   rating,
   prices,
   excursionId,
@@ -35,6 +38,15 @@ export default function ExcursionDetails({
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const truncatedDescription = description.slice(0, 100) + "...";
+
+  const formatDuration = () => {
+    if (!duration) return "";
+    const hours = duration.hours;
+    const minutes = duration.minutes;
+    if (hours === 0) return `${minutes} минут`;
+    if (minutes === 0) return `${hours} часа`;
+    return `${hours} часа ${minutes} минут`;
+  };
 
   const scrollToBookingForm = () => {
     const bookingForm = document.getElementById("booking-form");
@@ -81,7 +93,9 @@ export default function ExcursionDetails({
                   height={14}
                   className="text-[#3171F7] object-contain"
                 />
-                <span className="text-[16px] text-[#0D1723]">{duration}</span>
+                <span className="text-[16px] text-[#0D1723]">
+                  {formatDuration()}
+                </span>
               </div>
 
               <div
@@ -96,7 +110,9 @@ export default function ExcursionDetails({
                   height={14}
                   className="text-[#3171F7] object-contain"
                 />
-                <span className="text-[16px] text-[#0D1723]">{location}</span>
+                <span className="text-[16px] text-[#0D1723]">
+                  {addressMeeting}
+                </span>
               </div>
             </div>
             <div className="flex flex-col gap-2">

@@ -2,8 +2,21 @@
 
 import React, { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
-const BookingForm: React.FC = () => {
+interface BookingFormProps {
+  excursionId: string;
+  selectedTime?: string;
+  tickets: {
+    [key: string]: number;
+  };
+}
+
+const BookingForm: React.FC<BookingFormProps> = ({
+  excursionId,
+  selectedTime,
+  tickets,
+}) => {
   const isMobile = useIsMobile();
   const [formData, setFormData] = useState({
     name: "",
@@ -14,17 +27,69 @@ const BookingForm: React.FC = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, type, checked, value } = e.target;
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика отправки формы
-    console.log(formData);
+
+    if (!formData.agreement || !formData.personalData) {
+      toast.error("Необходимо согласиться с условиями");
+      return;
+    }
+
+    if (!selectedTime) {
+      toast.error("Выберите время экскурсии");
+      return;
+    }
+
+    const hasTickets = Object.values(tickets).some((count) => count > 0);
+    if (!hasTickets) {
+      toast.error("Выберите хотя бы один билет");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          excursionId,
+          fullName: formData.name,
+          phone: formData.phone,
+          time: selectedTime,
+          tickets: Object.entries(tickets)
+            .filter(([_, count]) => count > 0)
+            .map(([type, count]) => ({
+              type,
+              count,
+            })),
+          promoCode: formData.promoCode || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit booking");
+      }
+
+      toast.success("Заявка успешно отправлена");
+      setFormData({
+        name: "",
+        phone: "",
+        promoCode: "",
+        agreement: false,
+        personalData: false,
+      });
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      toast.error("Ошибка при отправке заявки");
+    }
   };
 
   if (isMobile) {
@@ -48,6 +113,7 @@ const BookingForm: React.FC = () => {
             value={formData.name}
             onChange={handleChange}
             placeholder="Иван Иванов"
+            required
             className="w-[517px] h-[47px] bg-white rounded-[10px] border border-[#D0D0D3] border-opacity-[44%] px-[25px] text-[#161819] text-[14px] leading-[21px] placeholder-[#161819] placeholder-opacity-[34%]"
           />
         </div>
@@ -62,6 +128,7 @@ const BookingForm: React.FC = () => {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
+            required
             placeholder="+7 (---) --- -- --"
             className="w-[517px] h-[47px] bg-white rounded-[10px] border border-[#D0D0D3] border-opacity-[44%] px-[25px] text-[#161819] text-[14px] leading-[21px] placeholder-[#161819] placeholder-opacity-[34%]"
           />

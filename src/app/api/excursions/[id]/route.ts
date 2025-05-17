@@ -71,7 +71,7 @@ export async function GET(
 // PUT /api/excursions/[id]
 export async function PUT(request: NextRequest) {
   try {
-    await connectToDatabase();
+    await dbConnect();
     console.log("Обновление данных экскурсии...");
     
     const id = request.nextUrl.pathname.split('/').pop();
@@ -79,6 +79,17 @@ export async function PUT(request: NextRequest) {
     
     const data = await request.json();
     console.log("Данные для обновления получены");
+
+    let objectId;
+    try {
+      objectId = new mongoose.Types.ObjectId(id);
+    } catch (error) {
+      console.error("Некорректный ID:", error);
+      return NextResponse.json(
+        { error: "Некорректный ID экскурсии" },
+        { status: 400 }
+      );
+    }
 
     // Проверяем и обрабатываем изображения
     if (data.card && Array.isArray(data.card.images)) {
@@ -136,6 +147,16 @@ export async function PUT(request: NextRequest) {
     const updateData = {
       ...data.card,
       images: data.card.images || [],
+      meetingPoint: {
+        name: data.card.meetingPoint?.name || '',
+        address: data.card.meetingPoint?.address || '',
+        coordinates: data.card.meetingPoint?.coordinates || undefined
+      },
+      duration: {
+        hours: data.card.duration?.hours || 0,
+        minutes: data.card.duration?.minutes || 0
+      },
+      startTimes: data.card.startTimes || []
     };
     
     // Удаляем _id из объекта обновления, если он там есть
@@ -143,19 +164,16 @@ export async function PUT(request: NextRequest) {
       delete updateData._id;
     }
     
-    // Обновляем данные экскурсии
-    const db = mongoose.connection.db;
-    if (!db) {
-      throw new Error("Не удалось получить подключение к базе данных");
-    }
-
-    const result = await db.collection("excursioncards").findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: updateData },
-      { returnDocument: "after" }
-    );
+    console.log('Данные для обновления:', JSON.stringify(updateData, null, 2));
     
-    if (!result || !result.value) {
+    // Обновляем данные экскурсии используя модель Mongoose
+    const updatedExcursion = await ExcursionCard.findByIdAndUpdate(
+      objectId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).populate('excursionProduct', '_id title');
+    
+    if (!updatedExcursion) {
       console.error(`Экскурсия с ID ${id} не найдена`);
       return NextResponse.json(
         { error: "Экскурсия не найдена" },
@@ -163,15 +181,22 @@ export async function PUT(request: NextRequest) {
       );
     }
     
+    console.log('Обновленная экскурсия:', JSON.stringify(updatedExcursion, null, 2));
+    
     // Обновляем коммерческие данные если есть
-    if (data.commercial && 'commercialSlug' in result.value && result.value.commercialSlug) {
+    if (data.commercial && updatedExcursion.commercialSlug) {
       const commercialData = {
         ...data.commercial,
         updatedAt: new Date()
       };
       
+      const db = mongoose.connection.db;
+      if (!db) {
+        throw new Error("Не удалось получить подключение к базе данных");
+      }
+      
       await db.collection("commercialexcursions").updateOne(
-        { commercialSlug: result.value.commercialSlug },
+        { commercialSlug: updatedExcursion.commercialSlug },
         { 
           $set: commercialData,
           $setOnInsert: { createdAt: new Date() }
@@ -181,7 +206,7 @@ export async function PUT(request: NextRequest) {
     }
     
     console.log(`Экскурсия с ID ${id} успешно обновлена`);
-    return NextResponse.json(result.value);
+    return NextResponse.json(updatedExcursion);
   } catch (error) {
     console.error("Ошибка при обработке запроса:", error);
     return NextResponse.json(

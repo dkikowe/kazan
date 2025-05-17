@@ -1,4 +1,3 @@
-import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
@@ -61,11 +60,12 @@ export async function GET(request: Request) {
 // POST /api/excursions
 export async function POST(request: Request) {
   try {
-    await connectToDatabase();
-    console.log("Создание новой экскурсии...");
+    console.log("Начало создания новой экскурсии...");
+    await dbConnect();
+    console.log("Подключение к базе данных установлено");
     
     const data = await request.json();
-    console.log("Получены данные для создания экскурсии");
+    console.log("Получены данные для создания экскурсии:", JSON.stringify(data, null, 2));
 
     if (!data.card || !data.card.title) {
       console.error("Отсутствует название экскурсии");
@@ -75,68 +75,90 @@ export async function POST(request: Request) {
       );
     }
 
-    try {
-      // Генерируем уникальный commercialSlug
-      const commercialSlug = `${data.card.title.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-')}-${nanoid(6)}`;
-      console.log(`Сгенерирован commercialSlug: ${commercialSlug}`);
+    // Проверяем наличие обязательных полей
+    console.log("Проверка полей:", {
+      placeMeeting: data.card.placeMeeting,
+      addressMeeting: data.card.addressMeeting,
+      duration: data.card.duration
+    });
 
-      // Подготавливаем данные для карточки экскурсии
-      const cardData = {
-        ...data.card,
-        commercialSlug,
-      };
-
-      // Обрабатываем товар экскурсии если указан
-      if (data.card.excursionProduct) {
-        try {
-          console.log(`Проверяем товар экскурсии: ${data.card.excursionProduct}`);
-          const product = await ExcursionProduct.findById(data.card.excursionProduct).lean();
-          
-          if (product) {
-            cardData.excursionProduct = {
-              _id: product._id.toString(),
-              title: product.title || 'Без названия',
-            };
-            console.log(`Прикреплен товар экскурсии: ${product._id}, название: ${product.title || 'Без названия'}`);
-          } else {
-            console.warn(`Товар экскурсии с ID ${data.card.excursionProduct} не найден`);
-            delete cardData.excursionProduct;
-          }
-        } catch (error) {
-          console.error("Ошибка при проверке товара экскурсии:", error);
-          delete cardData.excursionProduct;
-        }
-      }
-
-      console.log("Создаю новую карточку экскурсии...");
-      // Создаем экскурсию с помощью модели mongoose
-      const createdCard = await ExcursionCard.create(cardData);
-      console.log(`Создана новая экскурсия с ID: ${createdCard._id}`);
-
-      // Создаем коммерческие данные если они есть
-      if (data.commercial) {
-        console.log("Создаю коммерческие данные для экскурсии...");
-        const db = mongoose.connection.db;
-        if (db) {
-          await db.collection('commercialexcursions').insertOne({
-            ...data.commercial,
-            commercialSlug,
-            excursionId: createdCard._id,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          });
-          console.log("Коммерческие данные созданы");
-        }
-      }
-
-      return NextResponse.json(createdCard);
-    } catch (err) {
-      console.error("Ошибка при создании экскурсии:", err);
+    if (!data.card.placeMeeting) {
+      console.error("Отсутствует место встречи");
       return NextResponse.json(
-        { error: "Ошибка при создании экскурсии", details: err instanceof Error ? err.message : String(err) },
-        { status: 500 }
+        { error: "Место встречи обязательно" },
+        { status: 400 }
       );
     }
+
+    if (!data.card.addressMeeting) {
+      console.error("Отсутствует адрес встречи");
+      return NextResponse.json(
+        { error: "Адрес встречи обязателен" },
+        { status: 400 }
+      );
+    }
+
+    if (!data.card.duration || typeof data.card.duration.hours !== 'number' || typeof data.card.duration.minutes !== 'number') {
+      console.error("Некорректная продолжительность:", data.card.duration);
+      return NextResponse.json(
+        { error: "Продолжительность должна быть указана в часах и минутах" },
+        { status: 400 }
+      );
+    }
+
+    // Генерируем уникальный commercialSlug
+    const commercialSlug = `${data.card.title.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-')}-${nanoid(6)}`;
+    console.log(`Сгенерирован commercialSlug: ${commercialSlug}`);
+
+    // Создаем экскурсию напрямую через mongoose
+    const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error("Нет подключения к базе данных");
+    }
+
+    const createdCard = await db.collection('excursioncards').insertOne({
+      title: data.card.title,
+      seoTitle: data.card.seoTitle || "",
+      description: data.card.description || "",
+      images: data.card.images || [],
+      videoUrl: data.card.videoUrl || "",
+      reviews: data.card.reviews || [],
+      attractions: data.card.attractions || [],
+      tags: data.card.tags || [],
+      filterItems: data.card.filterItems || [],
+      isPublished: data.card.isPublished || false,
+      commercialSlug,
+      excursionProduct: data.card.excursionProduct || null,
+      placeMeeting: data.card.placeMeeting,
+      addressMeeting: data.card.addressMeeting,
+      duration: {
+        hours: Number(data.card.duration.hours) || 0,
+        minutes: Number(data.card.duration.minutes) || 0,
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    console.log("Созданная карточка:", JSON.stringify(createdCard, null, 2));
+
+    // Получаем созданную карточку
+    const savedCard = await db.collection('excursioncards').findOne({ _id: createdCard.insertedId });
+    console.log("Сохраненная карточка:", JSON.stringify(savedCard, null, 2));
+
+    // Создаем коммерческие данные если они есть
+    if (data.commercial) {
+      console.log("Создаю коммерческие данные для экскурсии...");
+      await db.collection('commercialexcursions').insertOne({
+        ...data.commercial,
+        commercialSlug,
+        excursionId: createdCard.insertedId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      console.log("Коммерческие данные созданы");
+    }
+
+    return NextResponse.json(savedCard);
   } catch (error) {
     console.error("Ошибка при обработке запроса:", error);
     return NextResponse.json(
