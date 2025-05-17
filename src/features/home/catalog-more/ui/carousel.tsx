@@ -25,7 +25,6 @@ interface Excursion {
 interface ExcursionProduct {
   _id: string;
   title: string;
-  startTimes: string[];
   images: string[];
 }
 
@@ -38,89 +37,91 @@ const CatalogMoreCarousel = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchExcursions = async () => {
+    const fetchData = async () => {
       try {
-        console.log("Загрузка экскурсий для карусели...");
+        setLoading(true);
+        setError(null);
+
+        console.log("Начало загрузки данных для карусели...");
+
         // Получаем данные экскурсий
         const excursionsRes = await fetch("/api/excursions");
-
         if (!excursionsRes.ok) {
-          const errorData = await excursionsRes.json();
-          throw new Error(errorData.error || "Ошибка при получении экскурсий");
+          throw new Error("Ошибка при получении экскурсий");
         }
-
         const excursionsData = await excursionsRes.json();
 
-        // Фильтруем только опубликованные экскурсии и ограничиваем до 8
-        const publishedExcursions = excursionsData
-          .filter((excursion: Excursion) => excursion.isPublished)
-          .slice(0, 8);
-
-        setExcursions(publishedExcursions);
-        console.log(
-          `Загружено ${publishedExcursions.length} экскурсий для карусели`
-        );
-
-        // Получаем все товары экскурсий
+        // Получаем данные товаров
         const productsRes = await fetch("/api/excursion-products");
         if (!productsRes.ok) {
           throw new Error("Ошибка при получении товаров экскурсий");
         }
-
         const productsData = await productsRes.json();
 
-        // Создаем хэш-таблицу товаров для быстрого доступа
+        // Создаем хэш-таблицу товаров
         const productsMap: Record<string, ExcursionProduct> = {};
         productsData.forEach((product: ExcursionProduct) => {
           productsMap[product._id] = product;
         });
 
+        // Фильтруем и устанавливаем данные
+        const publishedExcursions = excursionsData
+          .filter((excursion: Excursion) => excursion.isPublished)
+          .slice(0, 8);
+
+        setExcursions(publishedExcursions);
         setExcursionProducts(productsMap);
+
+        console.log(
+          `Загружено ${publishedExcursions.length} экскурсий и ${productsData.length} товаров`
+        );
       } catch (error) {
-        console.error("Ошибка при получении данных для карусели:", error);
-        setError(error instanceof Error ? error.message : "Неизвестная ошибка");
+        console.error("Ошибка при загрузке данных:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Произошла ошибка при загрузке данных"
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchExcursions();
+    fetchData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-center p-8 text-red-500">Ошибка: {error}</div>;
+    return (
+      <div className="flex items-center justify-center h-[400px] text-red-500">
+        {error}
+      </div>
+    );
   }
 
-  if (excursions.length === 0) {
-    return <div className="text-center p-8">Экскурсии не найдены</div>;
+  if (!excursions.length) {
+    return null;
   }
 
   return (
-    <Carousel className="w-full overflow-visible">
+    <Carousel className="w-full">
       <CarouselContent className="ml-[1rem] gap-4">
         {excursions.map((excursion) => {
-          // Получаем связанный товар для экскурсии
-          const product =
-            excursion.excursionProduct && excursion.excursionProduct._id
-              ? excursionProducts[excursion.excursionProduct._id]
-              : null;
+          const product = excursion.excursionProduct?._id
+            ? excursionProducts[excursion.excursionProduct._id]
+            : null;
 
-          // Используем первое изображение из товара экскурсии, если оно есть
-          // Иначе используем первое изображение экскурсии или заглушку
           const imageUrl =
-            product && product.images && product.images.length > 0
-              ? product.images[0]
-              : excursion.images && excursion.images.length > 0
-              ? excursion.images[0]
-              : "/images/excursions/catalog1.jpg";
+            product?.images?.[0] ||
+            excursion.images?.[0] ||
+            "/images/excursions/catalog1.jpg";
 
           return (
             <CarouselItem
@@ -133,14 +134,16 @@ const CatalogMoreCarousel = () => {
                 subtitle={
                   excursion.description?.substring(0, 100) + "..." || ""
                 }
-                rating={4.9} // Заглушка для рейтинга
-                duration="2 часа" // Заглушка для длительности
+                rating={4.9}
+                duration="2 часа"
                 imageUrl={imageUrl}
               />
             </CarouselItem>
           );
         })}
       </CarouselContent>
+      <CarouselPrevious className="hidden md:flex" />
+      <CarouselNext className="hidden md:flex" />
     </Carousel>
   );
 };

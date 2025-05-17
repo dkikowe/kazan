@@ -233,7 +233,7 @@ export default function WhereToGoPage() {
           </div>
         </div>
         <img
-          src="/images/catalog-filter/blog/blog.svg"
+          src="/images/catalog-filter/blog/blog.jpg"
           className="hidden md:block mb-[30px] md:mb-[40px] mt-[20px] md:mt-[40px] w-full"
           alt=""
         />
