@@ -174,7 +174,8 @@ const FilterSection = () => {
                     } else if (ticket.type === "child") {
                       prices.child = `от ${ticket.price} ₽`;
                     } else if (
-                      ticket.name.toLowerCase().includes("пенсионер")
+                      ticket.name.toLowerCase().includes("пенсионер") ||
+                      ticket.name.toLowerCase().includes("пенсионный")
                     ) {
                       prices.retired = `от ${ticket.price} ₽`;
                     } else if (ticket.name.toLowerCase().includes("до 7")) {

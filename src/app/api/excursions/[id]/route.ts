@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/dbConnect";
 import ExcursionProduct from "@/models/ExcursionProduct";
 import ExcursionCard from "@/models/ExcursionCard";
+import mongoose from "mongoose";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "@/lib/mongodb";
 // Импортируем связанные модели для регистрации в Mongoose
@@ -13,37 +14,42 @@ import FilterGroup from "@/models/FilterGroup";
 import excursionModel from "../../../models/Excursion";
 
 // GET /api/excursions/[id]
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    await connectToDatabase();
-    console.log("Получение данных экскурсии...");
+    await dbConnect();
+    console.log("API: Получение данных экскурсии...");
     
-    const id = request.nextUrl.pathname.split('/').pop();
-    console.log(`Запрашиваемый ID: ${id}`);
+    const id = params.id;
+    console.log(`API: Запрашиваемый ID: ${id}`);
     
-    const db = mongoose.connection.db;
-    if (!db) {
-      console.error("Не удалось получить объект базы данных");
-      return NextResponse.json(
-        { error: "Ошибка подключения к базе данных" },
-        { status: 500 }
-      );
+    // Регистрируем модели
+    if (!mongoose.models.ExcursionCard) {
+      mongoose.model('ExcursionCard', ExcursionCard.schema);
+    }
+    if (!mongoose.models.ExcursionProduct) {
+      mongoose.model('ExcursionProduct', ExcursionProduct.schema);
     }
     
     let objectId;
     try {
-      objectId = new ObjectId(id);
+      objectId = new mongoose.Types.ObjectId(id);
     } catch (error) {
-      console.error("Некорректный ID:", error);
+      console.error("API: Некорректный ID:", error);
       return NextResponse.json(
         { error: "Некорректный ID экскурсии" },
         { status: 400 }
       );
     }
     
-    // Получаем экскурсию из коллекции
-    const excursionCard = await db.collection("excursioncards").findOne({ _id: objectId });
-    console.log("Найдена экскурсия:", excursionCard ? "Да" : "Нет");
+    // Получаем экскурсию
+    const excursionCard = await ExcursionCard.findById(objectId)
+      .populate('excursionProduct', '_id title')
+      .lean();
+      
+    console.log("API: Найдена экскурсия:", excursionCard ? "Да" : "Нет");
     
     if (!excursionCard) {
       return NextResponse.json(
@@ -52,20 +58,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Получаем коммерческие данные из коллекции
-    const commercial = await db.collection("commercialexcursions").findOne({ 
-      commercialSlug: excursionCard.commercialSlug 
-    });
-    console.log("Найдены коммерческие данные:", commercial ? "Да" : "Нет");
-
-    return NextResponse.json({
-      card: excursionCard,
-      commercial: commercial || null,
-    });
+    return NextResponse.json({ card: excursionCard });
   } catch (error) {
-    console.error("Ошибка при получении экскурсии:", error);
+    console.error("API: Ошибка при получении экскурсии:", error);
     return NextResponse.json(
-      { error: "Ошибка при получении экскурсии" },
+      { error: "Ошибка при получении данных экскурсии" },
       { status: 500 }
     );
   }

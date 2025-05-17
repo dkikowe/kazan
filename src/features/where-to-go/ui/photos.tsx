@@ -145,6 +145,7 @@ export default function Photos({ excursionId }: PhotosProps) {
                   fill
                   className="object-cover rounded-lg"
                   priority={index === 0}
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
             </CarouselItem>
@@ -169,6 +170,7 @@ export default function Photos({ excursionId }: PhotosProps) {
             fill
             className="object-cover"
             priority={index === 0}
+            sizes="(max-width: 1440px) 50vw, 33vw"
           />
           {index === 2 && remainingCount > 0 && (
             <>
