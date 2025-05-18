@@ -10,55 +10,62 @@ import FilterGroup from "@/models/FilterGroup";
 // Регистрируем модель Excursion в mongoose
 // @ts-ignore: игнорируем ошибку для этого импорта
 import excursionModel from "../../../models/Excursion";
+import { connectToDatabase } from "@/lib/mongodb";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const id = context.params.id;
-  console.log("API: Получен запрос для товара экскурсии с ID:", id);
+  console.log("Начало обработки запроса на получение товара экскурсии");
+  console.log("ID товара:", params.id);
 
   try {
-    await dbConnect();
-    console.log("API: Подключение к базе данных успешно");
+    // Проверяем валидность ID
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      console.log("Невалидный ID товара");
+      return NextResponse.json(
+        { error: "Невалидный ID товара" },
+        { status: 400 }
+      );
+    }
 
-    const excursionProduct = await ExcursionProduct.findById(id)
-      .populate('excursionCard', 'title description images')
+    // Подключаемся к базе данных
+    await connectToDatabase();
+    console.log("Подключение к базе данных успешно");
+
+    // Получаем товар экскурсии
+    const product = await ExcursionProduct.findById(params.id)
+      .populate({
+        path: "excursionCard",
+        select: "title description images duration addressMeeting placeMeeting whatYouWillSee",
+      })
       .lean();
-    
-    console.log("API: Поиск товара экскурсии выполнен");
-    
-    if (!excursionProduct) {
-      console.log("API: Товар экскурсии не найден");
+
+    console.log("Результат поиска товара:", product ? "Товар найден" : "Товар не найден");
+
+    if (!product) {
+      console.log("Товар не найден");
       return NextResponse.json(
         { error: "Товар экскурсии не найден" },
         { status: 404 }
       );
     }
 
-    // Преобразуем даты в строки для корректной сериализации
-    const formattedProduct = {
-      ...excursionProduct,
-      dateRanges: excursionProduct.dateRanges?.map(range => ({
-        ...range,
-        start: range.start instanceof Date ? range.start.toISOString() : range.start,
-        end: range.end instanceof Date ? range.end.toISOString() : range.end,
-        excludedDates: range.excludedDates?.map(date => 
-          date instanceof Date ? date.toISOString() : date
-        )
-      })),
-      groups: excursionProduct.groups?.map(group => ({
-        ...group,
-        date: group.date instanceof Date ? group.date.toISOString() : group.date
-      }))
-    };
+    // Проверяем статус публикации
+    if (!product.isPublished) {
+      console.log("Товар не опубликован");
+      return NextResponse.json(
+        { error: "Товар не опубликован" },
+        { status: 403 }
+      );
+    }
 
-    console.log("API: Товар экскурсии найден, отправляем ответ");
-    return NextResponse.json(formattedProduct);
-  } catch (error: any) {
-    console.error("API: Ошибка при получении товара экскурсии:", error);
+    console.log("Отправляем ответ с данными товара");
+    return NextResponse.json(product);
+  } catch (error) {
+    console.error("Ошибка при получении товара:", error);
     return NextResponse.json(
-      { error: error.message || "Не удалось получить товар экскурсии" },
+      { error: "Ошибка при получении товара" },
       { status: 500 }
     );
   }
@@ -66,10 +73,9 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const id = context.params.id;
-  console.log("API: Получен запрос на обновление товара экскурсии с ID:", id);
+  console.log("API: Получен запрос на обновление товара экскурсии с ID:", params.id);
 
   try {
     await dbConnect();
@@ -82,9 +88,7 @@ export async function PUT(
     let images: string[] = [];
     if (data.images && Array.isArray(data.images)) {
       console.log("API: Обработка изображений из поля images");
-      // Удаляем дубликаты URL изображений
       const uniqueUrls = Array.from(new Set<string>(data.images));
-      // Фильтруем некорректные URL
       images = uniqueUrls.filter(url => {
         try {
           new URL(url);
@@ -96,11 +100,8 @@ export async function PUT(
       });
       console.log("API: Обработано изображений:", images.length);
     } else if (data.gallery && Array.isArray(data.gallery)) {
-      // Для обратной совместимости проверяем поле gallery
       console.log("API: Обработка изображений из поля gallery");
-      // Удаляем дубликаты URL изображений
       const uniqueUrls = Array.from(new Set<string>(data.gallery));
-      // Фильтруем некорректные URL
       images = uniqueUrls.filter(url => {
         try {
           new URL(url);
@@ -114,7 +115,7 @@ export async function PUT(
     }
 
     const updatedProduct = await ExcursionProduct.findByIdAndUpdate(
-      id,
+      params.id,
       { ...data, images },
       { new: true }
     ).populate('excursionCard', 'title description images');
@@ -140,16 +141,15 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const id = context.params.id;
-  console.log("API: Получен запрос на удаление товара экскурсии с ID:", id);
+  console.log("API: Получен запрос на удаление товара экскурсии с ID:", params.id);
 
   try {
     await dbConnect();
     console.log("API: Подключение к базе данных успешно");
 
-    const deletedProduct = await ExcursionProduct.findByIdAndDelete(id);
+    const deletedProduct = await ExcursionProduct.findByIdAndDelete(params.id);
 
     if (!deletedProduct) {
       console.log("API: Товар экскурсии не найден");

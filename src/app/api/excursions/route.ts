@@ -12,13 +12,24 @@ import dbConnect from "@/lib/dbConnect";
 export async function GET(request: Request) {
   try {
     await dbConnect();
+    console.log("API: Начало обработки запроса на получение экскурсий");
     
-    // Инициализируем модели перед запросом
-    mongoose.model('Tag', Tag.schema);
+    // Регистрируем все необходимые модели
+    if (!mongoose.models.ExcursionCard) {
+      mongoose.model('ExcursionCard', ExcursionCard.schema);
+    }
+    if (!mongoose.models.ExcursionProduct) {
+      mongoose.model('ExcursionProduct', ExcursionProduct.schema);
+    }
+    if (!mongoose.models.Tag) {
+      mongoose.model('Tag', Tag.schema);
+    }
     
     // Получаем параметры запроса
     const { searchParams } = new URL(request.url);
     const tagId = searchParams.get('tag');
+    
+    console.log("API: Параметры запроса:", { tagId });
     
     // Создаём базовый запрос
     let query: any = { isPublished: true };
@@ -27,31 +38,41 @@ export async function GET(request: Request) {
     if (tagId) {
       try {
         const tagObjectId = new mongoose.Types.ObjectId(tagId);
-        query.tags = tagObjectId;
-        console.log(`Фильтрация по тегу ID: ${tagId}`);
+        query.tags = { $in: [tagObjectId] };
+        console.log(`API: Фильтрация по тегу ID: ${tagId}`);
       } catch(err) {
-        console.error("Некорректный ID тега:", err);
+        console.error("API: Некорректный ID тега:", err);
+        return NextResponse.json(
+          { error: "Некорректный ID тега" },
+          { status: 400 }
+        );
       }
     }
     
-    console.log("Запрос экскурсий с фильтром:", JSON.stringify(query));
+    console.log("API: Запрос экскурсий с фильтром:", JSON.stringify(query));
     
     // Получаем экскурсии с учетом фильтра по тегам
     const excursions = await ExcursionCard.find(query)
-      .populate("excursionProduct")
+      .populate({
+        path: "excursionProduct",
+        select: "_id title images duration addressMeeting placeMeeting",
+        model: "ExcursionProduct"
+      })
       .populate({
         path: "tags",
-        model: mongoose.model('Tag')
+        model: "Tag",
+        select: "_id name"
       })
+      .select("_id title description images duration addressMeeting placeMeeting isPublished tags excursionProduct")
       .sort({ title: 1 });
       
-    console.log(`Найдено ${excursions.length} экскурсий`);
+    console.log(`API: Найдено ${excursions.length} экскурсий`);
     
     return NextResponse.json(excursions);
   } catch (error) {
-    console.error("Ошибка при получении экскурсий:", error);
+    console.error("API: Ошибка при получении экскурсий:", error);
     return NextResponse.json(
-      { error: "Ошибка при получении экскурсий" },
+      { error: "Ошибка при получении экскурсий", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

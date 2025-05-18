@@ -18,51 +18,68 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const id = params.id;
+  console.log("Начало обработки запроса на получение экскурсии");
+  console.log("ID экскурсии:", id);
+
   try {
-    await dbConnect();
-    console.log("API: Получение данных экскурсии...");
-    
-    const id = params.id;
-    console.log(`API: Запрашиваемый ID: ${id}`);
-    
-    // Регистрируем модели
-    if (!mongoose.models.ExcursionCard) {
-      mongoose.model('ExcursionCard', ExcursionCard.schema);
-    }
-    if (!mongoose.models.ExcursionProduct) {
-      mongoose.model('ExcursionProduct', ExcursionProduct.schema);
-    }
-    
-    let objectId;
-    try {
-      objectId = new mongoose.Types.ObjectId(id);
-    } catch (error) {
-      console.error("API: Некорректный ID:", error);
+    // Проверяем валидность ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log("Невалидный ID экскурсии");
       return NextResponse.json(
-        { error: "Некорректный ID экскурсии" },
+        { error: "Невалидный ID экскурсии" },
         { status: 400 }
       );
     }
-    
+
+    // Подключаемся к базе данных
+    await connectToDatabase();
+    console.log("Подключение к базе данных успешно");
+
+    // Регистрируем модели, если они еще не зарегистрированы
+    if (!mongoose.models.ExcursionCard) {
+      console.log("Регистрация модели ExcursionCard");
+      mongoose.model("ExcursionCard", ExcursionCard.schema);
+    }
+    if (!mongoose.models.Tag) {
+      console.log("Регистрация модели Tag");
+      mongoose.model("Tag", Tag.schema);
+    }
+
     // Получаем экскурсию
-    const excursionCard = await ExcursionCard.findById(objectId)
-      .populate('excursionProduct', '_id title')
+    const excursion = await mongoose.models.ExcursionCard.findById(id)
+      .populate({
+        path: "excursionProduct",
+        select: "_id title startTimes tickets addressMeeting",
+      })
       .lean();
-      
-    console.log("API: Найдена экскурсия:", excursionCard ? "Да" : "Нет");
-    
-    if (!excursionCard) {
+
+    console.log("Результат поиска экскурсии:", excursion ? "Экскурсия найдена" : "Экскурсия не найдена");
+
+    if (!excursion) {
+      console.log("Экскурсия не найдена");
       return NextResponse.json(
         { error: "Экскурсия не найдена" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ card: excursionCard });
+    // Проверяем статус публикации
+    const isPublished = (excursion as any).isPublished;
+    if (!isPublished) {
+      console.log("Экскурсия не опубликована");
+      return NextResponse.json(
+        { error: "Экскурсия не опубликована" },
+        { status: 403 }
+      );
+    }
+
+    console.log("Отправляем ответ с данными экскурсии");
+    return NextResponse.json(excursion);
   } catch (error) {
-    console.error("API: Ошибка при получении экскурсии:", error);
+    console.error("Ошибка при получении экскурсии:", error);
     return NextResponse.json(
-      { error: "Ошибка при получении данных экскурсии" },
+      { error: "Ошибка при получении экскурсии" },
       { status: 500 }
     );
   }

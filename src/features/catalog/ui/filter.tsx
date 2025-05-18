@@ -55,20 +55,39 @@ const FilterSection = () => {
   useEffect(() => {
     const fetchExcursions = async () => {
       try {
+        setLoading(true);
+        console.log("Начало загрузки данных для фильтрации...");
+
         // Получаем данные экскурсий
         const excursionsRes = await fetch("/api/excursions");
+        if (!excursionsRes.ok) {
+          const errorData = await excursionsRes.json();
+          throw new Error(errorData.error || "Ошибка при получении экскурсий");
+        }
         const excursionsData = await excursionsRes.json();
+        console.log(`Получено ${excursionsData.length} экскурсий`);
 
         // Фильтруем только опубликованные экскурсии
         const publishedExcursions = excursionsData.filter(
           (excursion: Excursion) => excursion.isPublished
         );
+        console.log(
+          `Отфильтровано ${publishedExcursions.length} опубликованных экскурсий`
+        );
 
         setExcursions(publishedExcursions);
+        setFilteredExcursions(publishedExcursions);
 
         // Получаем все товары экскурсий
         const productsRes = await fetch("/api/excursion-products");
+        if (!productsRes.ok) {
+          const errorData = await productsRes.json();
+          throw new Error(
+            errorData.error || "Ошибка при получении товаров экскурсий"
+          );
+        }
         const productsData = await productsRes.json();
+        console.log(`Получено ${productsData.length} товаров`);
 
         // Создаем хэш-таблицу товаров для быстрого доступа
         const productsMap: Record<string, ExcursionProduct> = {};
@@ -78,7 +97,7 @@ const FilterSection = () => {
 
         setExcursionProducts(productsMap);
       } catch (error) {
-        console.error("Ошибка при получении данных:", error);
+        console.error("Ошибка при загрузке данных:", error);
       } finally {
         setLoading(false);
       }
@@ -87,42 +106,25 @@ const FilterSection = () => {
     fetchExcursions();
   }, []);
 
-  // Фильтрация экскурсий по тегу
+  // Обновляем отфильтрованные экскурсии при изменении тега
   useEffect(() => {
-    if (!excursions.length) return;
-
     if (tagId) {
-      console.log("Фильтрация по тегу ID:", tagId);
-
-      const filtered = excursions.filter((excursion) => {
-        // Проверяем, есть ли у экскурсии массив тегов
-        if (!excursion.tags || !Array.isArray(excursion.tags)) {
-          return false;
-        }
-
-        // Проверяем каждый тег
-        return excursion.tags.some((tag) => {
-          // Если тег - это объект с _id
-          if (tag && typeof tag === "object" && "_id" in tag) {
-            return tag._id.toString() === tagId;
-          }
-          // Если тег - это строка
+      console.log(`Фильтрация по тегу ID: ${tagId}`);
+      const filtered = excursions.filter((excursion) =>
+        excursion.tags?.some((tag) => {
           if (typeof tag === "string") {
             return tag === tagId;
           }
-          return false;
-        });
-      });
-
-      console.log(
-        `Отфильтровано ${filtered.length} экскурсий из ${excursions.length}`
+          return tag._id === tagId;
+        })
       );
+      console.log(`Найдено ${filtered.length} экскурсий с тегом ${tagId}`);
       setFilteredExcursions(filtered);
     } else {
-      // Если нет фильтра по тегу, показываем все экскурсии
+      console.log("Сброс фильтрации по тегу");
       setFilteredExcursions(excursions);
     }
-  }, [excursions, tagId]);
+  }, [tagId, excursions]);
 
   return (
     <section className="max-w-[1440px] mx-auto">

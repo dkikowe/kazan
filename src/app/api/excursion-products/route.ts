@@ -15,15 +15,29 @@ import excursionModel from "../../models/Excursion";
 export async function GET(request: Request) {
   try {
     await dbConnect();
+    console.log("API: Начало обработки запроса на получение товаров экскурсий");
+    
+    // Регистрируем все необходимые модели
+    if (!mongoose.models.ExcursionProduct) {
+      mongoose.model('ExcursionProduct', ExcursionProduct.schema);
+    }
+    if (!mongoose.models.ExcursionCard) {
+      mongoose.model('ExcursionCard', ExcursionCard.schema);
+    }
+    if (!mongoose.models.Tag) {
+      mongoose.model('Tag', Tag.schema);
+    }
     
     // Получаем параметры запроса
     const { searchParams } = new URL(request.url);
     const excursionId = searchParams.get('excursionId');
 
-    console.log(`Запрос товаров экскурсий${excursionId ? ` для экскурсии ${excursionId}` : ''}`);
+    console.log(`API: Параметры запроса:`, { excursionId });
 
     // Формируем условие поиска
     const query = excursionId ? { excursionCard: excursionId } : {};
+
+    console.log("API: Запрос товаров с фильтром:", JSON.stringify(query));
 
     const products = await ExcursionProduct.find(query)
       .sort({ createdAt: -1 })
@@ -35,15 +49,16 @@ export async function GET(request: Request) {
       .lean();
 
     if (!products) {
+      console.log("API: Товары не найдены");
       return NextResponse.json([], { status: 200 });
     }
 
-    console.log(`Найдено ${products.length} товаров экскурсий`);
+    console.log(`API: Найдено ${products.length} товаров экскурсий`);
     return NextResponse.json(products);
   } catch (error: any) {
-    console.error("Ошибка при запросе товаров экскурсий:", error);
+    console.error("API: Ошибка при получении товаров экскурсий:", error);
     return NextResponse.json(
-      { error: error.message || "Не удалось получить товары экскурсий" },
+      { error: "Ошибка при получении товаров экскурсий", details: error.message || String(error) },
       { status: 500 }
     );
   }

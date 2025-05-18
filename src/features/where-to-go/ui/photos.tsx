@@ -38,14 +38,14 @@ export default function Photos({ excursionId }: PhotosProps) {
         console.log("Получены данные экскурсии:", excursionData);
 
         // Если есть связанный товар, получаем его данные
-        if (excursionData.card?.excursionProduct?._id) {
+        if (excursionData.excursionProduct?._id) {
           console.log(
             "Найден связанный товар:",
-            excursionData.card.excursionProduct._id
+            excursionData.excursionProduct._id
           );
 
           const productRes = await fetch(
-            `/api/excursion-products/${excursionData.card.excursionProduct._id}`
+            `/api/excursion-products/${excursionData.excursionProduct._id}`
           );
 
           if (!productRes.ok) {
@@ -67,27 +67,27 @@ export default function Photos({ excursionId }: PhotosProps) {
             );
             setImages(productData.images);
           } else if (
-            excursionData.card.images &&
-            Array.isArray(excursionData.card.images) &&
-            excursionData.card.images.length > 0
+            excursionData.images &&
+            Array.isArray(excursionData.images) &&
+            excursionData.images.length > 0
           ) {
             console.log(
               "В товаре нет изображений, используем изображения из экскурсии"
             );
-            setImages(excursionData.card.images);
+            setImages(excursionData.images);
           } else {
             console.log("Нет доступных изображений");
             setImages([]);
           }
         } else if (
-          excursionData.card?.images &&
-          Array.isArray(excursionData.card.images) &&
-          excursionData.card.images.length > 0
+          excursionData.images &&
+          Array.isArray(excursionData.images) &&
+          excursionData.images.length > 0
         ) {
           console.log(
             "Связанный товар не найден, используем изображения из экскурсии"
           );
-          setImages(excursionData.card.images);
+          setImages(excursionData.images);
         } else {
           console.log("Нет доступных изображений");
           setImages([]);

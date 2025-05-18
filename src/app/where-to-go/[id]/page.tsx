@@ -11,7 +11,7 @@ import ReviewCarousel from "@/features/home/review/ui/carousel";
 import ArticleCarouse from "@/features/home/article/ui/carousel";
 import KazanKremlinInfo from "@/features/where-to-go/ui/kazan-kremlin-info";
 import DontForget from "@/components/dontforget";
-import WhereToGoo from "@/components/WhereToGo";
+import WhereToGoo from "@/components/WhereToGoo";
 import BookingForm from "@/components/BookingForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NavbarDark from "@/widgets/navbar-dark";
@@ -114,94 +114,124 @@ export default function WhereToGoPage() {
       try {
         setLoading(true);
         setError(null);
+        console.log(`Начало загрузки данных экскурсии с ID: ${id}`);
 
-        // Получаем данные экскурсии по ID из URL
-        const excursionRes = await fetch(`/api/excursions/${id}`);
-
-        if (!excursionRes.ok) {
-          throw new Error("Не удалось загрузить данные экскурсии");
+        const response = await fetch(`/api/excursions/${id}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Не удалось загрузить данные экскурсии"
+          );
         }
 
-        const excursionData = await excursionRes.json();
+        const data = await response.json();
+        console.log("Получены данные экскурсии:", data);
 
-        if (!excursionData.card.isPublished) {
-          throw new Error("Экскурсия не найдена");
+        if (!data.isPublished) {
+          throw new Error("Экскурсия не опубликована");
         }
 
-        setExcursion(excursionData.card);
+        setExcursion(data);
 
-        // Обновляем данные для отображения
-        const newExcursionDetails = {
-          ...excursionDetails,
-          title: excursionData.card.title || defaultExcursionDetails.title,
-          description:
-            excursionData.card.description ||
-            defaultExcursionDetails.description,
-          duration:
-            excursionData.card.duration || defaultExcursionDetails.duration,
-          addressMeeting:
-            excursionData.card.addressMeeting ||
-            defaultExcursionDetails.addressMeeting,
-          photos:
-            excursionData.card.images && excursionData.card.images.length > 0
-              ? excursionData.card.images
-              : defaultExcursionDetails.photos,
-        };
-
-        // Если есть связанный товар, получаем его данные
-        if (
-          excursionData.card.excursionProduct &&
-          excursionData.card.excursionProduct._id
-        ) {
-          const productRes = await fetch(
-            `/api/excursion-products/${excursionData.card.excursionProduct._id}`
+        // Если есть товар экскурсии, загружаем его данные
+        if (data.excursionProduct?._id) {
+          console.log(
+            `Загрузка данных товара экскурсии с ID: ${data.excursionProduct._id}`
+          );
+          const productResponse = await fetch(
+            `/api/excursion-products/${data.excursionProduct._id}`
           );
 
-          if (productRes.ok) {
-            const productData = await productRes.json();
-            setProduct(productData);
-
-            // Обновляем цены, если товар существует
-            if (
-              productData &&
-              productData.tickets &&
-              productData.tickets.length > 0
-            ) {
-              const prices = {
-                adult: "Уточняйте",
-                child: "Уточняйте",
-                retired: "Уточняйте",
-                childUnder7: "Уточняйте",
-              };
-
-              productData.tickets.forEach((ticket: any) => {
-                if (
-                  ticket.type === "adult" ||
-                  ticket.name.toLowerCase().includes("взрослый")
-                ) {
-                  prices.adult = `от ${ticket.price} ₽`;
-                } else if (
-                  ticket.type === "child" ||
-                  ticket.name.toLowerCase().includes("детский")
-                ) {
-                  prices.child = `от ${ticket.price} ₽`;
-                } else if (ticket.name.toLowerCase().includes("пенсионный")) {
-                  prices.retired = `от ${ticket.price} ₽`;
-                } else if (ticket.name.toLowerCase().includes("до 7")) {
-                  prices.childUnder7 =
-                    ticket.price === 0 ? "Бесплатно" : `от ${ticket.price} ₽`;
-                }
-              });
-
-              newExcursionDetails.prices = prices;
-            }
+          if (!productResponse.ok) {
+            const errorData = await productResponse.json();
+            throw new Error(
+              errorData.error || "Не удалось загрузить данные товара экскурсии"
+            );
           }
-        }
 
-        setExcursionDetails(newExcursionDetails);
+          const productData = await productResponse.json();
+          console.log("Получены данные товара:", productData);
+          setProduct(productData);
+
+          // Обновляем детали экскурсии данными из товара
+          setExcursionDetails({
+            ...defaultExcursionDetails,
+            title: data.title || defaultExcursionDetails.title,
+            description:
+              data.description || defaultExcursionDetails.description,
+            duration:
+              productData.duration ||
+              data.duration ||
+              defaultExcursionDetails.duration,
+            addressMeeting:
+              productData.addressMeeting ||
+              data.addressMeeting ||
+              defaultExcursionDetails.addressMeeting,
+            photos:
+              productData.images?.length > 0
+                ? productData.images
+                : data.images?.length > 0
+                ? data.images
+                : defaultExcursionDetails.photos,
+          });
+
+          // Обновляем цены из товара
+          if (productData.tickets?.length > 0) {
+            const prices = {
+              adult: "Уточняйте",
+              child: "Уточняйте",
+              retired: "Уточняйте",
+              childUnder7: "Уточняйте",
+            };
+
+            productData.tickets.forEach((ticket: any) => {
+              if (
+                ticket.type === "adult" ||
+                ticket.name.toLowerCase().includes("взрослый")
+              ) {
+                prices.adult = `от ${ticket.price} ₽`;
+              } else if (
+                ticket.type === "child" ||
+                ticket.name.toLowerCase().includes("детский")
+              ) {
+                prices.child = `от ${ticket.price} ₽`;
+              } else if (ticket.name.toLowerCase().includes("пенсионный")) {
+                prices.retired = `от ${ticket.price} ₽`;
+              } else if (ticket.name.toLowerCase().includes("до 7")) {
+                prices.childUnder7 =
+                  ticket.price === 0 ? "Бесплатно" : `от ${ticket.price} ₽`;
+              }
+            });
+
+            console.log("Обновленные цены:", prices);
+            setExcursionDetails((prev) => ({
+              ...prev,
+              prices,
+            }));
+          }
+        } else {
+          // Если товара нет, используем данные из экскурсии
+          setExcursionDetails({
+            ...defaultExcursionDetails,
+            title: data.title || defaultExcursionDetails.title,
+            description:
+              data.description || defaultExcursionDetails.description,
+            duration: data.duration || defaultExcursionDetails.duration,
+            addressMeeting:
+              data.addressMeeting || defaultExcursionDetails.addressMeeting,
+            photos:
+              data.images?.length > 0
+                ? data.images
+                : defaultExcursionDetails.photos,
+          });
+        }
       } catch (error) {
-        console.error("Ошибка при получении данных:", error);
-        setError(error instanceof Error ? error.message : "Произошла ошибка");
+        console.error("Ошибка при загрузке данных:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Произошла ошибка при загрузке данных"
+        );
       } finally {
         setLoading(false);
       }

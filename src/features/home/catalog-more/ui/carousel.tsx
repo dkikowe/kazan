@@ -14,9 +14,22 @@ interface Excursion {
   description: string;
   images: string[];
   isPublished: boolean;
+  duration?: {
+    hours: number;
+    minutes: number;
+  };
+  addressMeeting?: string;
+  placeMeeting?: string;
   excursionProduct?: {
     _id: string;
     title: string;
+    images: string[];
+    duration?: {
+      hours: number;
+      minutes: number;
+    };
+    addressMeeting?: string;
+    placeMeeting?: string;
   };
 }
 
@@ -45,16 +58,22 @@ const CatalogMoreCarousel = () => {
         // Получаем данные экскурсий
         const excursionsRes = await fetch("/api/excursions");
         if (!excursionsRes.ok) {
-          throw new Error("Ошибка при получении экскурсий");
+          const errorData = await excursionsRes.json();
+          throw new Error(errorData.error || "Ошибка при получении экскурсий");
         }
         const excursionsData = await excursionsRes.json();
+        console.log(`Получено ${excursionsData.length} экскурсий`);
 
         // Получаем данные товаров
         const productsRes = await fetch("/api/excursion-products");
         if (!productsRes.ok) {
-          throw new Error("Ошибка при получении товаров экскурсий");
+          const errorData = await productsRes.json();
+          throw new Error(
+            errorData.error || "Ошибка при получении товаров экскурсий"
+          );
         }
         const productsData = await productsRes.json();
+        console.log(`Получено ${productsData.length} товаров`);
 
         // Создаем хэш-таблицу товаров
         const productsMap: Record<string, ExcursionProduct> = {};
@@ -66,6 +85,10 @@ const CatalogMoreCarousel = () => {
         const publishedExcursions = excursionsData
           .filter((excursion: Excursion) => excursion.isPublished)
           .slice(0, 8);
+
+        console.log(
+          `Отфильтровано ${publishedExcursions.length} опубликованных экскурсий`
+        );
 
         setExcursions(publishedExcursions);
         setExcursionProducts(productsMap);
@@ -117,7 +140,7 @@ const CatalogMoreCarousel = () => {
             : null;
 
           const imageUrl =
-            product?.images?.[0] ||
+            excursion.excursionProduct?.images?.[0] ||
             excursion.images?.[0] ||
             "/images/excursions/catalog1.jpg";
 
@@ -133,7 +156,11 @@ const CatalogMoreCarousel = () => {
                   excursion.description?.substring(0, 100) + "..." || ""
                 }
                 rating={4.9}
-                duration="2 часа"
+                duration={`${
+                  excursion.duration?.hours ||
+                  excursion.excursionProduct?.duration?.hours ||
+                  2
+                } часа`}
                 imageUrl={imageUrl}
               />
             </CarouselItem>

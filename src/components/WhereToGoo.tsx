@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+interface Ticket {
+  type: string;
+  name: string;
+  price: number;
+}
 
 interface WhereToGooProps {
   excursionId?: string;
-  onTicketsChange?: (tickets: {
-    adult: number;
-    child: number;
-    pensioner: number;
-    childUnder7: number;
-  }) => void;
+  onTicketsChange?: (tickets: { [key: string]: number }) => void;
   onTimeSelect?: (time: string) => void;
 }
 
@@ -20,160 +21,221 @@ export default function WhereToGoo({
   onTimeSelect,
 }: WhereToGooProps) {
   const isMobile = useIsMobile();
-  const [adultTickets, setAdultTickets] = useState(0);
-  const [childTickets, setChildTickets] = useState(0);
-  const [pensionerTickets, setPensionerTickets] = useState(0);
-  const [childUnder7Tickets, setChildUnder7Tickets] = useState(0);
+  const [tickets, setTickets] = useState<{ [key: string]: number }>({});
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [addressMeeting, setAddressMeeting] = useState<string>("");
+  const [availableTickets, setAvailableTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleIncrement = (
-    setter: React.Dispatch<React.SetStateAction<number>>
-  ) => {
-    setter((prev) => prev + 1);
+  useEffect(() => {
+    if (excursionId) {
+      fetchExcursionData();
+    }
+  }, [excursionId]);
+
+  const fetchExcursionData = async () => {
+    try {
+      const response = await fetch(`/api/excursion-cards/${excursionId}`);
+      if (!response.ok) throw new Error("Failed to fetch excursion data");
+      const data = await response.json();
+
+      if (data.addressMeeting) {
+        setAddressMeeting(data.addressMeeting);
+      }
+
+      if (data.excursionProduct?._id) {
+        const productResponse = await fetch(
+          `/api/excursion-products/${data.excursionProduct._id}`
+        );
+        if (!productResponse.ok)
+          throw new Error("Failed to fetch product data");
+        const productData = await productResponse.json();
+
+        if (productData.startTimes) {
+          setAvailableTimes(productData.startTimes);
+        }
+
+        if (productData.tickets) {
+          setAvailableTickets(productData.tickets);
+          // Инициализируем счетчики для каждого типа билета
+          const initialTickets = productData.tickets.reduce(
+            (acc: { [key: string]: number }, ticket: Ticket) => {
+              acc[ticket.type] = 0;
+              return acc;
+            },
+            {}
+          );
+          setTickets(initialTickets);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching excursion data:", error);
+      setError(error instanceof Error ? error.message : "Произошла ошибка");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDecrement = (
-    setter: React.Dispatch<React.SetStateAction<number>>
-  ) => {
-    setter((prev) => (prev > 0 ? prev - 1 : 0));
+  const handleTimeClick = (time: string) => {
+    setSelectedTime(time);
+    onTimeSelect?.(time);
   };
+
+  const handleDecrease = (type: string) => {
+    setTickets((prev) => {
+      const newTickets = {
+        ...prev,
+        [type]: Math.max(0, prev[type] - 1),
+      };
+      onTicketsChange?.(newTickets);
+      return newTickets;
+    });
+  };
+
+  const handleIncrease = (type: string) => {
+    setTickets((prev) => {
+      const newTickets = {
+        ...prev,
+        [type]: prev[type] + 1,
+      };
+      onTicketsChange?.(newTickets);
+      return newTickets;
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[600px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[600px] text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div
       className={`${isMobile ? "w-full" : "w-[517px]"} h-[${
-        isMobile ? "800px" : "600px"
-      }] flex flex-col bg-white rounded-[10px] border-box overflow-hidden shadow-none`}
+        isMobile ? "600px" : "563px"
+      }] flex flex-col bg-transparent rounded-[10px] border-box overflow-hidden shadow-none p-[20px]`}
     >
-      {/* Заголовок */}
-      <div className="w-full h-[60px] bg-[#3171F7] flex items-center justify-center">
-        <span className="text-white text-[18px] leading-[22px] font-medium">
-          Выберите билеты
+      {/* Верхняя белая полоса */}
+      <div className="w-[90%] h-[47px] bg-white rounded-[10px] border border-[#D0D0D3] flex items-center">
+        {/* Пусто, просто фон */}
+      </div>
+
+      {/* Время и кнопки времени */}
+      <div className="flex flex-col gap-[8px] pt-[22px]">
+        <span className="text-[#161819] text-[14px] leading-[21px]">
+          Время:
+        </span>
+        <div
+          className={`flex flex-row ${isMobile ? "flex-wrap" : ""} gap-[11px]`}
+        >
+          {availableTimes.map((time) => (
+            <button
+              key={time}
+              onClick={() => handleTimeClick(time)}
+              className={`w-[67px] h-[37px] ${
+                selectedTime === time
+                  ? "bg-[#3171F7] text-white"
+                  : "bg-[#F3F4F6] text-[#161819]"
+              } rounded-[10px] text-[14px] leading-[17px] flex items-center justify-center`}
+            >
+              {time}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Пункт сбора */}
+      <div className="flex flex-col gap-[4px] pt-[23px]">
+        <span className="text-[#161819] text-[14px] leading-[21px]">
+          Пункт сбора:
+        </span>
+        <span className="text-[#161819] text-[14px] leading-[21px] flex items-center gap-[10px]">
+          <img src="/icons/location.svg" width={11} height={14} alt="" />
+          {addressMeeting}
         </span>
       </div>
 
       {/* Счетчики билетов */}
-      <div className="flex flex-col gap-[10px] p-[15px]">
-        {/* Взрослые */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[#161819] text-[14px] leading-[21px]">
-              Взрослые
-            </span>
-            <span className="text-[#161819] text-[12px] leading-[18px] opacity-[60%]">
-              18+
-            </span>
+      <div className="flex mt-[20px] flex-col gap-[5px]">
+        {availableTickets.map((ticket) => (
+          <div
+            key={ticket.type}
+            className={`flex items-center ${
+              isMobile ? "justify-between" : "gap-[200px]"
+            }`}
+          >
+            <div className="text-[#161819] text-[14px] leading-[21px] w-[180px] ">
+              {ticket.name} ({ticket.price} ₽):
+            </div>
+            <div className="flex items-center gap-[11px]">
+              <button
+                onClick={() => handleDecrease(ticket.type)}
+                className="w-[38px] h-[38px] bg-[#F3F4F6] rounded-[9px] flex items-center justify-center"
+                disabled={tickets[ticket.type] === 0}
+              >
+                <div className="w-[11px] h-[1px] bg-[#534E4E]" />
+              </button>
+              <div className="w-[51px] h-[38px] bg-white rounded-[11px] border border-[#DDDDDD] flex items-center justify-center">
+                <span className="text-[#161819] text-[14px] leading-[15px]">
+                  {tickets[ticket.type]}
+                </span>
+              </div>
+              <button
+                onClick={() => handleIncrease(ticket.type)}
+                className="w-[38px] h-[38px] bg-[#3171F7] rounded-[9px] flex items-center justify-center"
+              >
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 11 11"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5.5 0V11M0 5.5H11"
+                    stroke="white"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-[15px]">
-            <button
-              onClick={() => handleDecrement(setAdultTickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              -
-            </button>
-            <span className="text-[#161819] text-[16px] leading-[24px]">
-              {adultTickets}
-            </span>
-            <button
-              onClick={() => handleIncrement(setAdultTickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        {/* Дети */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[#161819] text-[14px] leading-[21px]">
-              Дети
-            </span>
-            <span className="text-[#161819] text-[12px] leading-[18px] opacity-[60%]">
-              7-17 лет
-            </span>
-          </div>
-          <div className="flex items-center gap-[15px]">
-            <button
-              onClick={() => handleDecrement(setChildTickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              -
-            </button>
-            <span className="text-[#161819] text-[16px] leading-[24px]">
-              {childTickets}
-            </span>
-            <button
-              onClick={() => handleIncrement(setChildTickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        {/* Пенсионеры */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[#161819] text-[14px] leading-[21px]">
-              Пенсионеры
-            </span>
-            <span className="text-[#161819] text-[12px] leading-[18px] opacity-[60%]">
-              60+
-            </span>
-          </div>
-          <div className="flex items-center gap-[15px]">
-            <button
-              onClick={() => handleDecrement(setPensionerTickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              -
-            </button>
-            <span className="text-[#161819] text-[16px] leading-[24px]">
-              {pensionerTickets}
-            </span>
-            <button
-              onClick={() => handleIncrement(setPensionerTickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        {/* Дети до 7 лет */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[#161819] text-[14px] leading-[21px]">
-              Дети до 7 лет
-            </span>
-            <span className="text-[#161819] text-[12px] leading-[18px] opacity-[60%]">
-              Бесплатно
-            </span>
-          </div>
-          <div className="flex items-center gap-[15px]">
-            <button
-              onClick={() => handleDecrement(setChildUnder7Tickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              -
-            </button>
-            <span className="text-[#161819] text-[16px] leading-[24px]">
-              {childUnder7Tickets}
-            </span>
-            <button
-              onClick={() => handleIncrement(setChildUnder7Tickets)}
-              className="w-[30px] h-[30px] bg-[#F3F4F6] rounded-[5px] text-[#161819] text-[16px] leading-[24px] flex items-center justify-center"
-            >
-              +
-            </button>
-          </div>
-        </div>
+        ))}
       </div>
 
+      {/* Spacer для выравнивания кнопки вниз */}
+      <div className="flex-1" />
+
       {/* Кнопка добавления экскурсии */}
-      <div className="mt-auto p-[15px]">
-        <button className="w-full h-[50px] bg-[#3171F7] rounded-[10px] text-white text-[16px] leading-[20px] font-medium">
-          Добавить экскурсию
-        </button>
+      <div className="flex items-center justify-center">
+        <div className="w-[80%] h-[62px] bg-[#F3F4F6] rounded-[16px] border border-dashed border-[#AFB2B8] border-opacity-20 flex items-center justify-center mt-[24px] mb-[16px]">
+          <div className="flex items-center gap-[15px]">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M11 0V22M0 11H22" stroke="#AFB2B8" strokeWidth="1.5" />
+            </svg>
+            <span className="text-[#AFB2B8] text-[14px] leading-[17px]">
+              Добавить экскурсию
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
