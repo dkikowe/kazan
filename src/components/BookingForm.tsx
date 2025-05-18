@@ -7,6 +7,7 @@ import { toast } from "sonner";
 interface BookingFormProps {
   excursionId: string;
   selectedTime?: string;
+  selectedDate?: string;
   tickets: {
     [key: string]: number;
   };
@@ -15,6 +16,7 @@ interface BookingFormProps {
 const BookingForm: React.FC<BookingFormProps> = ({
   excursionId,
   selectedTime,
+  selectedDate,
   tickets,
 }) => {
   const isMobile = useIsMobile();
@@ -47,6 +49,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
       return;
     }
 
+    if (!selectedDate) {
+      toast.error("Выберите дату экскурсии");
+      return;
+    }
+
     const hasTickets = Object.values(tickets).some((count) => count > 0);
     if (!hasTickets) {
       toast.error("Выберите хотя бы один билет");
@@ -64,6 +71,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           fullName: formData.name,
           phone: formData.phone,
           time: selectedTime,
+          date: selectedDate,
           tickets: Object.entries(tickets)
             .filter(([_, count]) => count > 0)
             .map(([type, count]) => ({

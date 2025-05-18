@@ -349,11 +349,6 @@ export default function WhereToGoPage() {
             onTimeSelect={setSelectedTime}
             onTicketsChange={setSelectedTickets}
           />
-          <BookingForm
-            excursionId={id}
-            selectedTime={selectedTime || undefined}
-            tickets={selectedTickets}
-          />
         </div>
         <div className="flex flex-col gap-[0.625rem] lg:gap-[1rem] ">
           <div>
